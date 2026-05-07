@@ -1,25 +1,3 @@
-# import uuid
-
-# class Orchestrator:
-#     def __init__(self):
-#         self.active_sessions = {}
-
-#     def start_disaster_session(self, disaster_type: str):
-#         session_id = str(uuid.uuid4())[:8]
-
-#         result = {
-#             "session_id": session_id,
-#             "disaster_type": disaster_type,
-#             "status": "started",
-#             "agent": "disaster-agent",
-#             "message": f"{disaster_type} disaster session started"
-#         }
-
-#         self.active_sessions[session_id] = result
-#         return result
-
-
-# orchestrator = Orchestrator()
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
 from .event_dispatcher import EventDispatcher
@@ -120,8 +98,29 @@ class OrchestratorFlow:
         }
         return self.graph.invoke(initial_state)
 
+    def start_disaster_session(self, disaster_type: str):
+        print(f"Starting {disaster_type} orchestration...")
+        initial_state: AgentState = {
+            "disaster": {"type": disaster_type},
+            "routes": [],
+            "resources": [],
+            "rescues": [],
+            "traffic": {},
+            "explanations": [],
+            "events": []
+        }
+        result = self.graph.invoke(initial_state)
+        return {
+            "session_id": f"session_{disaster_type}_{hash(str(result)) % 1000}",
+            "status": "completed",
+            "agent": "orchestrator",
+            "disaster_type": disaster_type
+        }
+
 
 if __name__ == "__main__":
     flow = OrchestratorFlow()
     result = flow.run_orchestration()
     print(result)
+
+orchestrator = OrchestratorFlow()

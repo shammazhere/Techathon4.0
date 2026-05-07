@@ -43,7 +43,7 @@ async def start_disaster():
     for connection in active_connections:
         try:
             await connection.send_json(message)
-        except:
+        except Exception:
             disconnected.append(connection)
 
     for connection in disconnected:
