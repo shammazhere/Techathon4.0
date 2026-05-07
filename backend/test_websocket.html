@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Test</title>
+</head>
+<body>
+  <h2>WebSocket Test</h2>
+  <button onclick="connectSocket()">Connect</button>
+  <button onclick="sendMessage()">Send Test Message</button>
+  <pre id="output"></pre>
+
+  <script>
+    let socket;
+    const output = document.getElementById("output");
+
+    function log(message) {
+      output.textContent += message + "\n";
+    }
+
+    function connectSocket() {
+      socket = new WebSocket("ws://127.0.0.1:8000/ws/disaster");
+
+      socket.onopen = function () {
+        log("Connected to WebSocket");
+      };
+
+      socket.onmessage = function (event) {
+        log("Received: " + event.data);
+      };
+
+      socket.onerror = function () {
+        log("WebSocket error");
+      };
+
+      socket.onclose = function () {
+        log("WebSocket closed");
+      };
+    }
+
+    function sendMessage() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send("Test disaster update");
+        log("Sent: Test disaster update");
+      } else {
+        log("Socket is not connected");
+      }
+    }
+  </script>
+</body>
+</html>
