@@ -43,9 +43,8 @@ export default function RoutePanel() {
       <div className="flex px-3 gap-1 py-3 shrink-0">
         {(["routes", "signals"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-colors ${
-              tab === t ? "bg-white/10 text-white" : "bg-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5"
-            }`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-colors ${tab === t ? "bg-white/10 text-white" : "bg-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5"
+              }`}>
             {t === "routes" ? <Route size={12} /> : <TrafficCone size={12} />}
             {t}
           </button>
@@ -62,10 +61,9 @@ export default function RoutePanel() {
               const riskColor = getRiskColor(route.riskScore);
               return (
                 <div key={route.id} onClick={() => selectRoute(route.id)}
-                  className={`p-3 cursor-pointer rounded-lg border transition-colors ${
-                    isActive ? "bg-white/10 border-white/20" : "bg-[#111318]/40 border-transparent hover:bg-white/5"
-                  }`}>
-                  
+                  className={`p-3 cursor-pointer rounded-lg border transition-colors ${isActive ? "bg-white/10 border-white/20" : "bg-[#111318]/40 border-transparent hover:bg-white/5"
+                    }`}>
+
                   {/* Header */}
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-[11px] font-medium ${isActive ? "text-white" : "text-gray-300"}`}>
@@ -120,19 +118,18 @@ export default function RoutePanel() {
         ) : (
           <>
             <motion.button whileTap={{ scale: 0.98 }} onClick={runSignalOptimization} disabled={isComputing}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-md text-[11px] font-bold tracking-widest uppercase mb-3 transition-colors ${
-                isComputing ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5" : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
-              }`}>
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-md text-[11px] font-bold tracking-widest uppercase mb-3 transition-colors ${isComputing ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5" : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                }`}>
               <TrafficCone size={14} />
               {isComputing ? "Optimizing..." : "Optimize Signals"}
             </motion.button>
-            
+
             {lastOptimized && (
               <div className="text-[9px] text-center mb-3 text-gray-500 uppercase tracking-widest font-medium">
                 Last run: {lastOptimized.toLocaleTimeString()}
               </div>
             )}
-            
+
             {signals.map((sig) => {
               const modeColor = { evacuation: "#34d399", emergency: "#60a5fa", blocked: "#f87171", normal: "#fbbf24" }[sig.mode] ?? "#94a3b8";
               return (

@@ -6,16 +6,16 @@ import { useRiskStore } from "@/store/riskStore";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/map",       label: "Full Map" },
+  { href: "/map", label: "Full Map" },
   { href: "/analytics", label: "Analytics" },
-  { href: "/settings",  label: "Settings" },
+  { href: "/settings", label: "Settings" },
 ];
 
 const ALERT_STYLES: Record<string, { bg: string; shadow: string; label: string }> = {
-  green:  { bg: "bg-emerald-400", shadow: "shadow-emerald-500/50", label: "System Operational" },
+  green: { bg: "bg-emerald-400", shadow: "shadow-emerald-500/50", label: "System Operational" },
   yellow: { bg: "bg-amber-400", shadow: "shadow-amber-500/50", label: "Elevated Alert" },
   orange: { bg: "bg-orange-400", shadow: "shadow-orange-500/50", label: "High Alert" },
-  red:    { bg: "bg-red-500", shadow: "shadow-red-500/50", label: "Critical Priority" },
+  red: { bg: "bg-red-500", shadow: "shadow-red-500/50", label: "Critical Priority" },
 };
 
 export default function Navbar() {
@@ -26,14 +26,13 @@ export default function Navbar() {
   return (
     <header className="flex items-center justify-between px-6 h-14 shrink-0 border-b bg-black/40 backdrop-blur-xl border-white/10 z-50">
       {/* Logo */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600 shadow-lg shadow-blue-900/20">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </div>
-        <div className="text-sm font-black tracking-tight text-white uppercase">Civic Autopilot</div>
-      </div>
+      <Link href="/dashboard" className="flex items-center gap-2 group">
+        <img 
+          src="/logo_transparent.png" 
+          alt="Civic Autopilot" 
+          className="h-10 w-auto object-contain brightness-125 group-hover:scale-105 transition-transform duration-300" 
+        />
+      </Link>
 
       {/* Nav links */}
       <nav className="flex items-center gap-8">
@@ -41,9 +40,8 @@ export default function Navbar() {
           const active = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
             <Link key={href} href={href}
-              className={`flex items-center px-3 py-1.5 rounded text-[11px] font-semibold tracking-wider uppercase transition-colors ${
-                active ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-              }`}>
+              className={`flex items-center px-3 py-1.5 rounded text-[11px] font-semibold tracking-wider uppercase transition-colors ${active ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                }`}>
               {label}
             </Link>
           );

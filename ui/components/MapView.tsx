@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ZoomControl, MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { ZoomControl, MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+
+function MapAutoCenter({ disasters }: { disasters: any[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (disasters.length > 0) {
+      const latest = disasters[disasters.length - 1];
+      map.flyTo([latest.lat, latest.lng], 12, { duration: 2 });
+    }
+  }, [disasters, map]);
+  return null;
+}
+
 import L from "leaflet";
 import { useRiskStore, type SeverityLevel } from "@/store/riskStore";
 import { useRouteStore } from "@/store/routeStore";
@@ -12,7 +24,7 @@ const SEVERITY_COLOR: Record<SeverityLevel, string> = {
   critical: "#f87171", high: "#fb923c", medium: "#fbbf24", low: "#34d399",
 };
 
-export default function MapView() {
+export default function MapView({ autoCenter = false }: { autoCenter?: boolean }) {
   const { activeDisasters, removeDisaster } = useRiskStore();
   const { routes, activeRouteId } = useRouteStore();
   const { shelters, units } = useResourceStore();
@@ -36,12 +48,13 @@ export default function MapView() {
   return (
     <div className="relative w-full h-full bg-[#080B10] overflow-hidden">
       <MapContainer 
-        center={[12.9716, 77.5946]} 
-        zoom={11} 
+        center={[20.5937, 78.9629]} 
+        zoom={5} 
         scrollWheelZoom={true}
         className="w-full h-full z-0"
         zoomControl={false}
       >
+        {autoCenter && <MapAutoCenter disasters={activeDisasters} />}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
@@ -73,8 +86,8 @@ export default function MapView() {
             key={d.id} 
             position={[d.lat, d.lng]}
             icon={createDivIcon(`
-              <div style="font-size: 24px; filter: drop-shadow(0 0 5px ${SEVERITY_COLOR[d.severity]}); transform: translate(-25%, -25%);">
-                ${d.type === 'flood' ? '🌊' : d.type === 'wildfire' ? '🔥' : '🌋'}
+              <div className="font-sans text-2xl filter drop-shadow-[0_0_8px_rgba(251,146,60,0.8)] transform -translate-x-1/2 -translate-y-1/2">
+                🔥
               </div>
             `)}
           >
@@ -124,7 +137,7 @@ export default function MapView() {
              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
              <span className="text-xs font-bold text-white tracking-widest uppercase">System Operational</span>
            </div>
-           <p className="text-[10px] text-white/50 font-mono">BANGALORE COMMAND CENTER — LEAFLET ENGINE</p>
+           <p className="text-[10px] text-white/50 font-mono">NATIONAL COMMAND CENTER — LEAFLET ENGINE</p>
         </div>
       </div>
     </div>

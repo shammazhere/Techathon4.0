@@ -157,7 +157,7 @@ export default function SettingsPage() {
           {/* Footer Branding */}
           <footer className="pt-10 flex justify-between items-center opacity-30 grayscale transition-all duration-700">
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-blue-400" />
+              <img src="/logo_transparent.png" alt="" className="w-5 h-5 object-contain" />
               <span className="text-[10px] font-black tracking-widest uppercase">Civic Autopilot v4.2.0</span>
             </div>
           </footer>

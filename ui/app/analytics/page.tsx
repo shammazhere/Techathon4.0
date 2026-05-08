@@ -10,17 +10,16 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import {
-  Activity, ShieldAlert, Ambulance, Route, Package
+  Activity, ShieldAlert, Ambulance, Route, Package, Wind, Droplets, Home, Box
 } from "lucide-react";
 
 // ─── Mock time-series data ───────────────────────────────────────────────────
 const HOURS = Array.from({ length: 12 }, (_, i) => `${String(i * 2).padStart(2, "0")}:00`);
 
-const floodSeries = HOURS.map((h, i) => ({
+const fireSeries = HOURS.map((h, i) => ({
   time: h,
-  flood: Math.min(100, 10 + i * 6 + Math.random() * 8),
-  fire:  Math.min(100, 20 + Math.sin(i) * 15 + Math.random() * 10),
-  seismic: Math.min(100, 5 + Math.cos(i * 0.7) * 12 + Math.random() * 6),
+  fire: Math.min(100, 20 + Math.sin(i * 0.5) * 30 + Math.random() * 15),
+  intensity: Math.min(100, 10 + i * 5 + Math.random() * 10),
 }));
 
 const evacuationSeries = HOURS.map((h, i) => ({
@@ -37,12 +36,12 @@ const resourceSeries = [
 ];
 
 const radarData = [
-  { metric: "Flood Risk",   value: 82 },
-  { metric: "Fire Risk",    value: 65 },
-  { metric: "Seismic Risk", value: 28 },
-  { metric: "Road Block",   value: 55 },
+  { metric: "Fire Risk",    value: 85 },
+  { metric: "Smoke Index",  value: 62 },
+  { metric: "Road Block",   value: 45 },
   { metric: "Pop. Density", value: 74 },
   { metric: "Shelter Cap.", value: 68 },
+  { metric: "Unit Cover",   value: 52 },
 ];
 
 // ─── Tooltip styles ───────────────────────────────────────────────────────────
@@ -109,14 +108,10 @@ export default function AnalyticsPage() {
         {/* Charts grid */}
         <div className="grid grid-cols-2 gap-6">
           {/* Risk over time */}
-          <ChartCard title="Risk Index Over Time (12h)">
+          <ChartCard title="Wildfire Risk Index (12h)">
             <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={floodSeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+              <AreaChart data={fireSeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                 <defs>
-                  <linearGradient id="gFlood" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#0ea5e9" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                  </linearGradient>
                   <linearGradient id="gFire" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
@@ -126,9 +121,8 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} dy={10} />
                 <YAxis domain={[0, 100]} tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="flood"   name="Flood"   stroke="#0ea5e9" fill="url(#gFlood)" strokeWidth={2.5} />
-                <Area type="monotone" dataKey="fire"    name="Fire"    stroke="#ef4444" fill="url(#gFire)"  strokeWidth={2.5} />
-                <Area type="monotone" dataKey="seismic" name="Seismic" stroke="#eab308" fill="none"         strokeWidth={1.5} strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="fire"      name="Fire Risk"    stroke="#ef4444" fill="url(#gFire)"  strokeWidth={2.5} />
+                <Area type="monotone" dataKey="intensity" name="Heat Intensity" stroke="#f97316" fill="none"         strokeWidth={1.5} strokeDasharray="4 4" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -176,56 +170,75 @@ export default function AnalyticsPage() {
 
           {/* Supply utilization */}
           <ChartCard title="Strategic Supply Reserves">
-            <div className="grid grid-cols-2 gap-3 h-full px-1">
+            <div className="grid grid-cols-2 gap-4 h-full content-center">
               {supplies.map((s) => {
                 const pct = Math.round((s.deployed / s.total) * 100);
-                const isCritical = pct > 80;
+                const isCritical = pct > 85;
+                
+                const iconMap: Record<string, any> = {
+                  "Medical Kits": Activity,
+                  "Food Rations": Box,
+                  "Oxygen Tanks": Wind,
+                  "Water Supply": Droplets,
+                  "Blankets": Home,
+                  "Rescue Gear": ShieldAlert
+                };
+                const Icon = iconMap[s.category] || Package;
+
                 return (
                   <div 
                     key={s.category} 
-                    className="relative group overflow-hidden rounded-xl border border-white/5 bg-white/2 p-3 transition-all hover:bg-white/4 hover:border-white/10 flex flex-col justify-between"
+                    className="relative group rounded-xl border border-white/5 bg-white/1 p-3.5 transition-all hover:bg-white/3 hover:border-white/10"
                   >
-                    {/* Dynamic Background Glow */}
-                    <div 
-                      className="absolute -right-6 -bottom-6 w-16 h-16 rounded-full opacity-0 blur-2xl transition-all duration-700 group-hover:opacity-10"
-                      style={{ background: s.color }}
-                    />
-                    
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-xl bg-white/5 border border-white/5 shadow-inner transition-all duration-500 group-hover:bg-white/10 group-hover:border-white/20 group-hover:scale-105"
-                      >
-                        <span className="grayscale group-hover:grayscale-0 transition-all">{s.icon}</span>
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-200 transition-colors truncate">
-                          {s.category}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-1 h-1 rounded-full ${isCritical ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-                          <span className="text-[9px] font-mono text-gray-500 uppercase tracking-tighter truncate">
-                            {(s.total - s.deployed).toLocaleString()} Units Left
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-500 shadow-lg"
+                          style={{ 
+                            background: `${s.color}15`, 
+                            border: `1px solid ${s.color}30`,
+                            color: s.color 
+                          }}
+                        >
+                          <Icon size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-gray-300 group-hover:text-white transition-colors">
+                            {s.category}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-tighter">
+                            {(s.total - s.deployed).toLocaleString()} {s.unit} avail
                           </span>
                         </div>
                       </div>
+                      <div className="flex flex-col items-end">
+                        <span style={{ color: s.color }} className="text-sm font-black tabular-nums tracking-tighter">
+                          {pct}%
+                        </span>
+                        {isCritical && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span className="w-1 h-1 rounded-full bg-red-500 animate-ping" />
+                            <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">Low</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-3">
-                      <div className="flex-1 h-1.5 rounded-full bg-black/40 overflow-hidden border border-white/5 p-[0.5px] relative">
+                    <div className="space-y-1.5">
+                      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden relative">
                         <div 
-                          className="h-full rounded-full transition-all duration-1000 ease-out relative z-10" 
+                          className="h-full rounded-full transition-all duration-1000 ease-out" 
                           style={{
                             width: `${pct}%`,
-                            background: `linear-gradient(90deg, ${s.color}aa, ${s.color})`,
-                            boxShadow: `0 0 10px ${s.color}66`,
+                            background: `linear-gradient(90deg, ${s.color}cc, ${s.color})`,
+                            boxShadow: `0 0 12px ${s.color}50`,
                           }} 
                         />
-                        {/* Scanline overlay effect */}
-                        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] w-20 animate-[shimmer_2s_infinite] opacity-30 z-20" />
                       </div>
-                      <span className="text-[11px] font-black font-mono tracking-tighter tabular-nums" style={{ color: s.color }}>
-                        {pct}<span className="text-[8px] opacity-60 ml-0.5">%</span>
-                      </span>
+                      <div className="flex justify-between text-[7px] font-bold text-gray-600 uppercase tracking-[0.2em]">
+                        <span>Utilized</span>
+                        <span>Reserved</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -242,9 +255,7 @@ export default function AnalyticsPage() {
               <thead>
                 <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px] tracking-wider">
                   <th className="pb-3 px-4 font-semibold">Zone</th>
-                  <th className="pb-3 px-4 font-semibold">Flood %</th>
-                  <th className="pb-3 px-4 font-semibold">Fire %</th>
-                  <th className="pb-3 px-4 font-semibold">Seismic %</th>
+                  <th className="pb-3 px-4 font-semibold">Fire Risk %</th>
                   <th className="pb-3 px-4 font-semibold">Overall Risk</th>
                   <th className="pb-3 px-4 font-semibold">Population</th>
                   <th className="pb-3 px-4 font-semibold">Elderly %</th>
@@ -257,9 +268,7 @@ export default function AnalyticsPage() {
                   return (
                     <tr key={c.id} className="hover:bg-white/2 transition-colors">
                       <td className="py-3 px-4 font-medium text-gray-200">{c.zone}</td>
-                      <td className={`py-3 px-4 ${c.floodRisk >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.floodRisk}</td>
-                      <td className={`py-3 px-4 ${c.fireRisk  >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}</td>
-                      <td className="py-3 px-4 text-gray-500">{c.seismicRisk}</td>
+                      <td className={`py-3 px-4 ${c.fireRisk  >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}%</td>
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${oc}`}>
                           {c.overallRisk}%

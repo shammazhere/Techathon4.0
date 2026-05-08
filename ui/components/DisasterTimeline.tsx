@@ -6,9 +6,7 @@ import { useRiskStore, type DisasterType, type SeverityLevel } from "@/store/ris
 import { Waves, Flame, Activity, AlertTriangle, ShieldAlert, Target, History, X } from "lucide-react";
 
 const TYPE_META: Record<DisasterType, { icon: React.ReactNode; label: string; color: string }> = {
-  flood: { icon: <Waves size={16} />, label: "Flood", color: "text-blue-400" },
   wildfire: { icon: <Flame size={16} />, label: "Wildfire", color: "text-orange-400" },
-  earthquake: { icon: <Activity size={16} />, label: "Earthquake", color: "text-amber-400" },
   none: { icon: <AlertTriangle size={16} />, label: "Unknown", color: "text-gray-400" },
 };
 
@@ -24,7 +22,7 @@ const SEV_BG: Record<SeverityLevel, string> = {
 };
 
 const SEVERITY_OPTS: SeverityLevel[] = ["critical", "high", "medium", "low"];
-const TYPE_OPTS: DisasterType[] = ["flood", "wildfire", "earthquake"];
+const TYPE_OPTS: DisasterType[] = ["wildfire"];
 
 // Predefined trigger locations (lat/lng not shown on mock map, just labels)
 const TRIGGER_ZONES = [
@@ -45,7 +43,7 @@ function formatRelative(d: Date): string {
 
 export default function DisasterTimeline() {
   const { activeDisasters, disasterHistory, triggerDisaster, removeDisaster, clearAll } = useRiskStore();
-  const [selType, setSelType] = useState<DisasterType>("flood");
+  const [selType, setSelType] = useState<DisasterType>("wildfire");
   const [selSev, setSelSev] = useState<SeverityLevel>("high");
   const [selZone, setSelZone] = useState(0);
   const [triggering, setTriggering] = useState(false);
@@ -61,7 +59,7 @@ export default function DisasterTimeline() {
     setTriggering(true);
     await new Promise((r) => setTimeout(r, 900));
     const zone = TRIGGER_ZONES[selZone];
-    triggerDisaster(selType, zone.lat, zone.lng, selSev);
+    triggerDisaster(zone.lat, zone.lng, selSev);
     setTriggering(false);
   }
 
@@ -142,24 +140,14 @@ export default function DisasterTimeline() {
             {/* Disaster type */}
             <div>
               <div className="text-[10px] font-semibold mb-2 tracking-wider uppercase text-gray-500">
-                Disaster Type
+                Active Threat
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {TYPE_OPTS.map((t) => {
-                  const m = TYPE_META[t];
-                  const active = selType === t;
-                  return (
-                    <button key={t} onClick={() => setSelType(t)}
-                      className={`flex flex-col items-center gap-2 py-3 rounded-lg border transition-all ${active
-                          ? `bg-blue-500/10 border-blue-500/30 ${m.color}`
-                          : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
-                        }`}
-                    >
-                      {m.icon}
-                      <span className="text-[11px] font-medium">{m.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-3 p-4 rounded-xl border bg-orange-500/10 border-orange-500/20 text-orange-400">
+                <Flame size={20} />
+                <div>
+                  <div className="text-sm font-bold">Wildfire Simulation</div>
+                  <div className="text-[10px] opacity-70">Tactical spread & evacuation mode</div>
+                </div>
               </div>
             </div>
 

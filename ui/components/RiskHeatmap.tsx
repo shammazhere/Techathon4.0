@@ -25,7 +25,6 @@ const MinimalRiskBar = ({ value, colorClass }: { value: number; colorClass: stri
 export default function RiskHeatmap() {
   const { riskCells, activeDisasters, alertLevel } = useRiskStore();
 
-  const avgFlood = riskCells.length ? Math.round(riskCells.reduce((s, c) => s + c.floodRisk, 0) / riskCells.length) : 0;
   const avgFire = riskCells.length ? Math.round(riskCells.reduce((s, c) => s + c.fireRisk, 0) / riskCells.length) : 0;
 
   const blockedCount = riskCells.filter((c) => c.roadBlocked).length;
@@ -52,8 +51,7 @@ export default function RiskHeatmap() {
           </span>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-gray-500 font-medium">
-          <span className="flex items-center gap-1"><Waves size={10} /> {avgFlood}%</span>
-          <span className="flex items-center gap-1"><Flame size={10} /> {avgFire}%</span>
+          <span className="flex items-center gap-1"><Flame size={10} className="text-orange-400" /> Avg Fire: {avgFire}%</span>
           <span className="flex items-center gap-1 text-red-400"><AlertTriangle size={10} /> {blockedCount} blocked</span>
         </div>
       </div>
@@ -97,16 +95,8 @@ export default function RiskHeatmap() {
               {/* Risk bars */}
               <div className="space-y-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <Waves size={10} className="text-gray-500" />
-                  <MinimalRiskBar value={cell.floodRisk} colorClass={getRiskColorClass(cell.floodRisk)} />
-                </div>
-                <div className="flex items-center gap-2">
                   <Flame size={10} className="text-gray-500" />
                   <MinimalRiskBar value={cell.fireRisk} colorClass={getRiskColorClass(cell.fireRisk)} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Seismic size={10} className="text-gray-500" />
-                  <MinimalRiskBar value={cell.seismicRisk} colorClass={getRiskColorClass(cell.seismicRisk)} />
                 </div>
               </div>
 
