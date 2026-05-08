@@ -1,7 +1,7 @@
 "use client";
 
 import { useRiskStore } from "@/store/riskStore";
-import { Waves, Flame, Activity as Seismic, ShieldAlert, AlertTriangle } from "lucide-react";
+import { Flame, ShieldAlert, AlertTriangle, Wind, Leaf, Target } from "lucide-react";
 
 const getRiskColorClass = (v: number) => {
   if (v >= 80) return "text-red-400";
@@ -92,23 +92,45 @@ export default function RiskHeatmap() {
                 </div>
               </div>
 
-              {/* Risk bars */}
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <Flame size={10} className="text-gray-500" />
+              {/* Tactical Detail Grid */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 text-[9px] text-gray-500 uppercase font-bold tracking-tight">
+                    <Flame size={10} className="text-orange-500" /> Fire Risk
+                  </div>
                   <MinimalRiskBar value={cell.fireRisk} colorClass={getRiskColorClass(cell.fireRisk)} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 text-[9px] text-gray-500 uppercase font-bold tracking-tight">
+                    <Target size={10} className="text-blue-400" /> Evac Priority
+                  </div>
+                  <MinimalRiskBar value={cell.evacPriority} colorClass={getRiskColorClass(cell.evacPriority)} />
                 </div>
               </div>
 
-              {/* Population */}
+              {/* Environment Micro-stats */}
+              <div className="flex items-center gap-4 mb-3 text-[10px] bg-white/5 p-2 rounded-md border border-white/5">
+                <div className="flex items-center gap-1.5">
+                  <Leaf size={10} className="text-emerald-500/70" />
+                  <span className="text-gray-400">Fuel:</span>
+                  <span className="text-gray-200 font-mono">{Math.round(cell.fuelDensity * 100)}%</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Wind size={10} className="text-blue-400/70" />
+                  <span className="text-gray-400">Wind:</span>
+                  <span className="text-gray-200 font-mono">{cell.windSpeed}km/h</span>
+                </div>
+              </div>
+
+              {/* Population & Demographics */}
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
                 <div className="flex gap-1.5">
-                  <span className="text-gray-500">Pop:</span>
-                  <span className="text-gray-300 font-medium">{cell.population.toLocaleString()}</span>
+                  <span className="text-gray-500 font-medium">Population:</span>
+                  <span className="text-gray-300 font-bold tabular-nums">{cell.population.toLocaleString()}</span>
                 </div>
                 <div className="flex gap-1.5">
-                  <span className="text-gray-500">Elderly:</span>
-                  <span className={`font-medium ${cell.elderlyDensity > 0.25 ? "text-orange-400" : "text-gray-300"}`}>
+                  <span className="text-gray-500 font-medium">Elderly:</span>
+                  <span className={`font-bold tabular-nums ${cell.elderlyDensity > 0.25 ? "text-orange-400" : "text-gray-300"}`}>
                     {Math.round(cell.elderlyDensity * 100)}%
                   </span>
                 </div>

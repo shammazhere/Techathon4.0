@@ -26,12 +26,12 @@ const TYPE_OPTS: DisasterType[] = ["wildfire"];
 
 // Predefined trigger locations (lat/lng not shown on mock map, just labels)
 const TRIGGER_ZONES = [
-  { label: "Zone A – North District", lat: 12.99, lng: 77.62 },
-  { label: "Zone B – East Harbor", lat: 12.98, lng: 77.59 },
-  { label: "Zone C – South Valley", lat: 12.94, lng: 77.63 },
-  { label: "Zone D – West Hills", lat: 12.98, lng: 77.56 },
-  { label: "Zone E – Central Core", lat: 12.97, lng: 77.59 },
-  { label: "Zone F – Industrial", lat: 12.96, lng: 77.59 },
+  { label: "Northern Himalayas", lat: 30.3165, lng: 78.0322 }, // Uttarakhand
+  { label: "Eastern Forests", lat: 21.9320, lng: 86.4428 },    // Simlipal, Odisha
+  { label: "Western Ghats", lat: 11.7588, lng: 76.2415 },      // Wayanad/Bandipur
+  { label: "Central India", lat: 22.3340, lng: 78.0322 },      // Madhya Pradesh
+  { label: "Deccan Plateau", lat: 15.3173, lng: 75.7139 },     // Karnataka/Maharashtra
+  { label: "Northeast Region", lat: 26.5775, lng: 93.1711 },   // Kaziranga, Assam
 ];
 
 function formatRelative(d: Date): string {
@@ -123,8 +123,8 @@ export default function DisasterTimeline() {
         {(["trigger", "history"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[11px] font-bold tracking-wider uppercase transition-colors ${tab === t
-                ? "bg-white/10 text-white border border-white/10"
-                : "bg-transparent text-gray-500 border border-transparent hover:text-gray-300 hover:bg-white/5"
+              ? "bg-white/10 text-white border border-white/10"
+              : "bg-transparent text-gray-500 border border-transparent hover:text-gray-300 hover:bg-white/5"
               }`}
           >
             {t === "trigger" ? <Target size={14} /> : <History size={14} />}
@@ -164,8 +164,8 @@ export default function DisasterTimeline() {
                   return (
                     <button key={s} onClick={() => setSelSev(s)}
                       className={`py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider border transition-all ${active
-                          ? `${bgClass} ${c} border-opacity-30`
-                          : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
+                        ? `${bgClass} ${c} border-opacity-30`
+                        : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
                         }`}
                     >
                       {s}
@@ -184,8 +184,8 @@ export default function DisasterTimeline() {
                 {TRIGGER_ZONES.map((z, i) => (
                   <button key={i} onClick={() => setSelZone(i)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${selZone === i
-                        ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
-                        : "bg-white/5 border-transparent text-gray-400 hover:bg-white/10"
+                      ? "bg-orange-500/10 border-orange-500/30 text-orange-400"
+                      : "bg-white/5 border-transparent text-gray-400 hover:bg-white/10"
                       }`}
                   >
                     {z.label}
@@ -200,8 +200,8 @@ export default function DisasterTimeline() {
               onClick={handleTrigger}
               disabled={triggering}
               className={`w-full py-3 rounded-lg font-bold text-xs tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${triggering
-                  ? "bg-white/5 text-gray-500 border-white/10 cursor-not-allowed"
-                  : `${SEV_BG[selSev]} ${SEV_COLOR[selSev]} border-opacity-40 hover:bg-opacity-20`
+                ? "bg-white/5 text-gray-500 border-white/10 cursor-not-allowed"
+                : `${SEV_BG[selSev]} ${SEV_COLOR[selSev]} border-opacity-40 hover:bg-opacity-20`
                 }`}
             >
               {triggering ? (

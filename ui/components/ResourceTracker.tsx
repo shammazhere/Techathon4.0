@@ -125,26 +125,70 @@ export default function ResourceTracker() {
           );
         })}
 
-        {tab === "supplies" && supplies.map((item) => {
-          const pct = Math.round((item.deployed / item.total) * 100);
-          return (
-            <div key={item.category} className="bg-[#111318]/40 border border-transparent p-3 rounded-lg hover:bg-white/5 transition-colors">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="text-lg opacity-80">{item.icon}</div>
-                <div className="flex-1">
-                  <div className="text-[11px] font-medium text-gray-300 mb-0.5">{item.category}</div>
-                  <div className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">
-                    <span className="text-gray-400">{item.deployed.toLocaleString()}</span> / {item.total.toLocaleString()} {item.unit}
+        {tab === "supplies" && (
+          <div className="grid grid-cols-1 gap-3 mt-2">
+            {supplies.map((item) => {
+              const pct = Math.round((item.deployed / item.total) * 100);
+              const isCritical = pct > 85;
+              return (
+                <div 
+                  key={item.category} 
+                  className="relative group rounded-xl border border-white/5 bg-[#111318]/40 p-3.5 transition-all hover:bg-white/5 hover:border-white/10"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-500 shadow-lg text-lg"
+                        style={{ 
+                          background: `${item.color}15`, 
+                          border: `1px solid ${item.color}30`,
+                        }}
+                      >
+                        <span className="group-hover:scale-110 transition-transform">{item.icon}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-gray-300 group-hover:text-white transition-colors">
+                          {item.category}
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-tighter">
+                          {(item.total - item.deployed).toLocaleString()} {item.unit} avail
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span style={{ color: item.color }} className="text-sm font-black tabular-nums tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                        {pct}%
+                      </span>
+                      {isCritical && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="w-1 h-1 rounded-full bg-red-500 animate-ping" />
+                          <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">Low</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden relative">
+                      <div 
+                        className="h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{
+                          width: `${pct}%`,
+                          background: `linear-gradient(90deg, ${item.color}cc, ${item.color})`,
+                          boxShadow: `0 0 12px ${item.color}50`,
+                        }} 
+                      />
+                    </div>
+                    <div className="flex justify-between text-[7px] font-bold text-gray-600 uppercase tracking-[0.2em]">
+                      <span>Utilized</span>
+                      <span>Reserved</span>
+                    </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold" style={{ color: item.color }}>{pct}%</span>
-              </div>
-              <div className="h-[2px] rounded-full bg-white/5 overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: item.color }} />
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

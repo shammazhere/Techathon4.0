@@ -125,7 +125,7 @@ export default function SettingsPage() {
                           {field.type === "toggle" ? (
                             <ToggleSwitch defaultOn={field.default as boolean} />
                           ) : field.type === "select" ? (
-                            <select 
+                            <select
                               value={field.label === "Map Style" ? mapStyle : undefined}
                               defaultValue={field.label !== "Map Style" ? field.default as string : undefined}
                               onChange={(e) => {
