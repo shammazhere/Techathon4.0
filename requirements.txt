@@ -1,0 +1,16 @@
+networkx
+numpy
+rasterio
+matplotlib
+pandas
+kagglehub
+scipy
+pyosmium
+
+# Backend Dependencies
+fastapi
+uvicorn
+websockets
+python-dotenv
+supabase
+langgraph
