@@ -1,0 +1,8 @@
+networkx
+numpy
+rasterio
+matplotlib
+pandas
+kagglehub
+scipy
+pyosmium
