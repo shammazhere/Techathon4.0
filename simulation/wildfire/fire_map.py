@@ -92,11 +92,11 @@ def fetch_nasa_firms(api_key, area_url=None, days=1, source="VIIRS_SNPP_NRT"):
         resp.raise_for_status()
         from io import StringIO
         df = pd.read_csv(StringIO(resp.text))
-        print(f"✓ Fetched {len(df)} fire hotspots from NASA FIRMS")
+        print(f"[OK] Fetched {len(df)} fire hotspots from NASA FIRMS")
         return df
     except Exception as e:
         print(f"NASA FIRMS fetch failed: {e}")
-        print("→ Using sample data instead")
+        print("-> Using sample data instead")
         return _sample_firms_data()
 
 
@@ -172,11 +172,11 @@ def fetch_nifc_perimeters(year=None):
         resp.raise_for_status()
         data = resp.json()
         count = len(data.get("features", []))
-        print(f"✓ Fetched {count} fire perimeters from NIFC")
+        print(f"[OK] Fetched {count} fire perimeters from NIFC")
         return data
     except Exception as e:
         print(f"NIFC fetch failed: {e}")
-        print("→ Using sample perimeter data")
+        print("-> Using sample perimeter data")
         return _sample_perimeter_geojson()
 
 
@@ -204,8 +204,12 @@ def _sample_perimeter_geojson():
     }
 
 
-def add_fire_perimeters(m, geojson_data, layer_name="🗺️ Fire Perimeters (NIFC)"):
+def add_fire_perimeters(m, geojson_data, layer_name="Fire Perimeters (NIFC)"):
     """Add NIFC fire perimeters as polygons"""
+    # Guard against empty or malformed GeoJSON
+    if not geojson_data or "type" not in geojson_data or not geojson_data.get("features"):
+        print("[WARN] No fire perimeter data to display, skipping layer.")
+        return m
 
     def style_fn(feature):
         contained = feature["properties"].get("PercentContained", 0) or 0
@@ -433,7 +437,7 @@ def build_wildfire_map(
 
     # Save
     m.save(output_path)
-    print(f"\n✓ Map saved to: {output_path}")
+    print(f"\n[OK] Map saved to: {output_path}")
     print(f"  Open in browser: file://{os.path.abspath(output_path)}")
     return m
 
@@ -464,9 +468,9 @@ if __name__ == "__main__":
        and set sim_origin_lat/lon to the real-world location.
     """
     build_wildfire_map(
-        api_key="YOUR_NASA_FIRMS_KEY",
-        center=[37.5, -119.5],        # California
-        bbox="-124,32,-114,42",
+        api_key="695471fc9b1756546bbf5c0e29e5044f",
+        center=[8.5, 105.0],          # Southeast Asia
+        bbox="100,2,110,15",
         days=2,
         output_path="wildfire_map.html",
     )
