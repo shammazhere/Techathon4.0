@@ -49,6 +49,7 @@ export default function DisasterTimeline() {
   const [triggering, setTriggering] = useState(false);
   const [tab, setTab] = useState<"trigger" | "history">("trigger");
   const [mounted, setMounted] = useState(false);
+  const [alertSent, setAlertSent] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -93,24 +94,49 @@ export default function DisasterTimeline() {
             const sc = SEV_COLOR[d.severity];
             const bgClass = SEV_BG[d.severity];
             return (
-              <div key={d.id} className={`rounded-lg p-3 border flex items-start justify-between gap-3 ${bgClass}`}>
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 ${meta.color}`}>{meta.icon}</div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-semibold ${sc}`}>{meta.label}</span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border bg-black/20 ${sc} ${bgClass.replace('bg-', 'border-')}`}>
-                        {d.severity}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-gray-400">
-                      Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {mounted ? formatRelative(d.startTime) : '---'}
+              <div key={d.id} className={`rounded-lg p-3 border flex flex-col gap-3 ${bgClass}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 ${meta.color}`}>{meta.icon}</div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs font-semibold ${sc}`}>{meta.label}</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border bg-black/20 ${sc} ${bgClass.replace('bg-', 'border-')}`}>
+                          {d.severity}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-400">
+                        Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {mounted ? formatRelative(d.startTime) : '---'}
+                      </div>
                     </div>
                   </div>
+                  <button onClick={() => removeDisaster(d.id)}
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <X size={14} />
+                  </button>
                 </div>
-                <button onClick={() => removeDisaster(d.id)}
-                  className="shrink-0 p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                  <X size={14} />
+                
+                {/* Emergency Broadcast System (EBS) Button */}
+                <button 
+                  onClick={() => setAlertSent(prev => ({ ...prev, [d.id]: true }))}
+                  disabled={alertSent[d.id]}
+                  className={`w-full py-2 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${
+                    alertSent[d.id] 
+                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed" 
+                      : "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                  }`}
+                >
+                  {alertSent[d.id] ? (
+                    <>
+                      <Activity size={12} />
+                      EBS Broadcast Sent
+                    </>
+                  ) : (
+                    <>
+                      <ShieldAlert size={12} className="animate-pulse" />
+                      Broadcast Evac Alert ({d.affectedPopulation.toLocaleString()})
+                    </>
+                  )}
                 </button>
               </div>
             );
