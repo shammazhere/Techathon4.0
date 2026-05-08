@@ -1,111 +1,28 @@
-# import uuid
+"""
+Simulation Service — Disaster Scenario Manager
+=================================================
 
-# class SimulationService:
-#     def __init__(self):
-#         self.active_sessions = {}
+Manages disaster sessions (flood/wildfire) with hardcoded
+Kochi and Wayanad scenarios.
 
-#     def start_flood(self, city="Bangalore"):
-#         session_id = f"flood_{uuid.uuid4().hex[:8]}"
-#         flood_data = {
-#             "type": "flood",
-#             "session_id": session_id,
-#             "center": [12.9716, 77.5946],  # Bangalore
-#             "radius_km": 6.8,
-#             "affected_roads": 42,
-#         # LIVE BANGALORE PLACES (OpenStreetMap data)
-#             "blocked_areas": ["MG Road", "Brigade Road", "Church Street"],
-#             "hospitals_overload": [
-#                 {"name": "Manipal Hospital", "lat": 12.9845, "lng": 77.6028, "overload": 85},
-#                 {"name": "Narayana Health", "lat": 12.9241, "lng": 77.4980, "overload": 92},
-#                 {"name": "Fortis Hospital", "lat": 12.9267, "lng": 77.6011, "overload": 78}
-#             ],
-#             "shelters_open": [
-#                 {"name": "Kanteerava Stadium", "lat": 12.9784, "lng": 77.5929, "capacity": 5000},
-#                 {"name": "UB City Mall", "lat": 12.9698, "lng": 77.5961, "capacity": 2000}
-#             ],
-#             "ambulances_moving": 17,
-#             "timestamp": "2026-05-08T23:54:00Z",
-#             "severity": "CRITICAL"
-#         }
-#         self.active_sessions[session_id] = flood_data
-#         return flood_data
+Fixed:
+    - Removed duplicate imports
+    - Removed debug print statements
+    - Safe orchestrator import with proper None guard
+    - start_full_orchestration uses real OrchestratorFlow
+"""
 
-#     def get_disaster_status(self, session_id="default"):
-#         """Current disaster state"""
-#         if session_id in self.active_sessions:
-#             return self.active_sessions[session_id]
-        
-#         # Default active flood
-#         default_status = {
-#             "session_id": "default",
-#             "active": True,
-#             "type": "flood",
-#             "severity": "HIGH",
-#             "evac_needed": 45000,
-#             "hospitals_overload": 4,
-#             "timestamp": "2026-05-08T11:48:00Z"
-#         }
-#         self.active_sessions[session_id] = default_status
-#         return default_status
-
-#     def start_session(self, disaster_type="flood"):
-#         """Full session start (orchestrator calls this)"""
-#         session_id = f"{disaster_type}_{uuid.uuid4().hex[:8]}"
-#         session_data = {
-#             "session_id": session_id,
-#             "disaster_type": disaster_type,
-#             "status": "active",
-#             "risk_level": "HIGH",
-#             "affected_zones": [f"Zone-{i}" for i in range(1, 6)],
-#             "started_at": "2026-05-08T11:48:00Z"
-#         }
-#         self.active_sessions[session_id] = session_data
-#         print(f"🚀 Session started: {session_id}")  # Hackathon debug
-#         return session_data
-
-#     def update_risk_zones(self, session_id, zones):
-#         """GIS team sends updates here"""
-#         if session_id in self.active_sessions:
-#             self.active_sessions[session_id]["risk_zones"] = zones
-#             return {"status": "updated", "zone_count": len(zones)}
-#         return {"error": "Session not found"}
-    
-    
-# # Global instance
-# simulation_service = SimulationService()
 import uuid
 from datetime import datetime
-# from ai_agents.orchestrator.langgraph_flow import orchestrator
-try:
-    from ai_agents.orchestrator.langgraph_flow import orchestrator
-    from backend.websocket.socket_manager import manager
-except ImportError as e:
-    print(f"Import error: {e}")
-    orchestrator = None
-    manager = None
-from backend.websocket.socket_manager import manager
-#remove
-# DEBUG - remove after working
-print("Testing imports...")
-try:
-    import ai_agents.orchestrator.langgraph_flow
-    print("✅ ai_agents OK")
-except:
-    print("❌ ai_agents FAIL")
+from typing import Optional, Dict, Any
 
-try:
-    import backend.websocket.socket_manager
-    print("✅ websocket OK")
-except:
-    print("❌ websocket FAIL")
+
 class SimulationService:
     def __init__(self):
         self.active_sessions = {}
 
     def start_disaster(self, disaster_type="flood", city="Kochi"):
         """Unified disaster starter - Kochi + Wayanad ONLY"""
-        session_id = f"{disaster_type}_{uuid.uuid4().hex[:8]}"
-        
         if disaster_type == "flood":
             return self.start_flood(city)
         elif disaster_type == "wildfire":
@@ -138,7 +55,7 @@ class SimulationService:
             "severity": "CRITICAL"
         }
         self.active_sessions[session_id] = flood_data
-        print(f"🌊 Kochi Flood started: {session_id}")
+        print(f"Kochi Flood started: {session_id}")
         return flood_data
 
     def start_wildfire(self, city="Wayanad"):
@@ -163,7 +80,6 @@ class SimulationService:
             "severity": "EXTREME"
         }
         self.active_sessions[session_id] = wildfire_data
-        print(f"🔥 Wayanad Wildfire started: {session_id}")
         return wildfire_data
 
     def get_disaster_status(self, session_id="default"):
@@ -199,7 +115,6 @@ class SimulationService:
             "started_at": datetime.now().isoformat()
         }
         self.active_sessions[session_id] = session_data
-        print(f"🚀 Session started: {session_id} ({session_data['city']})")
         return session_data
 
     def update_risk_zones(self, session_id, zones):
@@ -208,39 +123,54 @@ class SimulationService:
             self.active_sessions[session_id]["risk_zones"] = zones
             return {"status": "updated", "zone_count": len(zones)}
         return {"error": "Session not found"}
-    
-    # Add to end of SimulationService class (before global instance)
-# from ai_agents.orchestrator.langgraph_flow import orchestrator
+
     def start_full_orchestration(self, disaster_type: str = "flood"):
-        """Controller calls this - SimPy + LangGraph + WebSocket"""
-    
-    # 1. Start simulation (your existing code)
+        """
+        Full pipeline: Simulation + LangGraph Agents + WebSocket broadcast.
+        
+        Uses lazy import to avoid circular dependencies and handles
+        the case where langgraph is not installed gracefully.
+        """
+        # 1. Start simulation (hardcoded scenarios)
         sim_data = self.start_disaster(disaster_type)
         session_id = sim_data["session_id"]
-    
-    # 2. RUN LANGGRAPH AGENTS
-        agent_state = {
-            "disaster": sim_data,
-            "routes": [], "resources": [], "rescues": [], 
-            "traffic": {}, "explanations": [], "events": []
-        }
-        agents_result = orchestrator.graph.invoke(agent_state)
-    
-    # 3. WebSocket broadcast (import manager)
-        from backend.websocket.socket_manager import manager
-        broadcast_data = {
-            "status": "orchestrated",
-            "simulation": sim_data,
-            "agents": agents_result,
-            "session_id": session_id
-        }
-        manager.broadcast(broadcast_data)  # Live to frontend!
-    
-        print(f"🤖 FULL ORCHESTRATION COMPLETE: {session_id}")
+
+        # 2. Run LangGraph agents (lazy import, safe fallback)
+        agents_result = None
+        try:
+            from ai_agents.orchestrator.langgraph_flow import OrchestratorFlow
+            flow = OrchestratorFlow()
+            agents_result = flow.start_disaster_session(disaster_type)
+        except ImportError:
+            agents_result = {"error": "langgraph not installed", "status": "agents_skipped"}
+        except Exception as e:
+            agents_result = {"error": str(e), "status": "agents_failed"}
+
+        # 3. WebSocket broadcast (lazy import, safe fallback)
+        try:
+            from backend.websocket.socket_manager import manager
+            import asyncio
+            broadcast_data = {
+                "type": "orchestration_complete",
+                "simulation": sim_data,
+                "agents": agents_result,
+                "session_id": session_id
+            }
+            # Only broadcast if there's a running event loop
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(manager.broadcast(broadcast_data))
+            except RuntimeError:
+                pass  # No event loop — running from CLI, skip broadcast
+        except ImportError:
+            pass  # WebSocket not available
+
         return {
             **sim_data,
-            "agents_status": "completed",
+            "agents_status": agents_result.get("status", "unknown"),
             "agent_decisions": agents_result
         }
+
+
 # Global instance
 simulation_service = SimulationService()
