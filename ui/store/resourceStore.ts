@@ -21,6 +21,8 @@ export interface ResourceUnit {
   assignedZone?: string;
   eta?: number; // minutes
   fuelLevel: number; // 0-100
+  lat?: number;
+  lng?: number;
 }
 
 export interface SupplyItem {
@@ -45,23 +47,23 @@ interface ResourceStore {
 }
 
 const MOCK_SHELTERS: Shelter[] = [
-  { id: "s1", name: "Civic Center Arena", lat: 37.78, lng: -122.41, capacity: 3000, occupied: 2450, hasmedical: true, hasfood: true, status: "open" },
-  { id: "s2", name: "North High School", lat: 37.80, lng: -122.43, capacity: 800, occupied: 800, hasmedical: false, hasfood: true, status: "full" },
-  { id: "s3", name: "East Community Hall", lat: 37.77, lng: -122.39, capacity: 500, occupied: 320, hasmedical: true, hasfood: true, status: "open" },
-  { id: "s4", name: "Westpark Stadium", lat: 37.76, lng: -122.44, capacity: 5000, occupied: 1200, hasmedical: true, hasfood: true, status: "open" },
-  { id: "s5", name: "Harbor Emergency Camp", lat: 37.79, lng: -122.38, capacity: 1200, occupied: 980, hasmedical: false, hasfood: true, status: "open" },
+  { id: "s1", name: "Cubbon Park Center", lat: 12.97, lng: 77.59, capacity: 3000, occupied: 2450, hasmedical: true, hasfood: true, status: "open" },
+  { id: "s2", name: "Indiranagar High", lat: 12.98, lng: 77.64, capacity: 800, occupied: 800, hasmedical: false, hasfood: true, status: "full" },
+  { id: "s3", name: "Koramangala Hall", lat: 12.93, lng: 77.62, capacity: 500, occupied: 320, hasmedical: true, hasfood: true, status: "open" },
+  { id: "s4", name: "Hebbal Stadium", lat: 13.03, lng: 77.59, capacity: 5000, occupied: 1200, hasmedical: true, hasfood: true, status: "open" },
+  { id: "s5", name: "MG Road Emergency Camp", lat: 12.97, lng: 77.61, capacity: 1200, occupied: 980, hasmedical: false, hasfood: true, status: "open" },
 ];
 
 const MOCK_UNITS: ResourceUnit[] = [
-  { id: "u1", type: "ambulance", label: "AMB-01", status: "deployed", location: "Zone A", assignedZone: "Zone A – North District", eta: 4, fuelLevel: 78 },
-  { id: "u2", type: "ambulance", label: "AMB-02", status: "deployed", location: "Zone B", assignedZone: "Zone B – East Harbor", eta: 7, fuelLevel: 62 },
-  { id: "u3", type: "ambulance", label: "AMB-03", status: "available", location: "Base Station", fuelLevel: 95 },
-  { id: "u4", type: "firetruck", label: "FT-01", status: "deployed", location: "Zone D", assignedZone: "Zone D – West Hills", eta: 2, fuelLevel: 88 },
-  { id: "u5", type: "firetruck", label: "FT-02", status: "deployed", location: "Zone C", assignedZone: "Zone C – South Valley", eta: 11, fuelLevel: 55 },
-  { id: "u6", type: "rescue", label: "RSC-01", status: "deployed", location: "Zone B", assignedZone: "Zone B – East Harbor", eta: 3, fuelLevel: 71 },
-  { id: "u7", type: "rescue", label: "RSC-02", status: "available", location: "Base Station", fuelLevel: 100 },
-  { id: "u8", type: "supply", label: "SUP-01", status: "returning", location: "En Route", fuelLevel: 43 },
-  { id: "u9", type: "supply", label: "SUP-02", status: "deployed", location: "Zone E", assignedZone: "Zone E – Central Core", eta: 18, fuelLevel: 60 },
+  { id: "u1", type: "ambulance", label: "AMB-01", status: "deployed", location: "Zone A", assignedZone: "Zone A – North District", eta: 4, fuelLevel: 78, lat: 12.99, lng: 77.62 },
+  { id: "u2", type: "ambulance", label: "AMB-02", status: "deployed", location: "Zone B", assignedZone: "Zone B – East Harbor", eta: 7, fuelLevel: 62, lat: 12.985, lng: 77.595 },
+  { id: "u3", type: "ambulance", label: "AMB-03", status: "available", location: "Base Station", fuelLevel: 95, lat: 12.97, lng: 77.61 },
+  { id: "u4", type: "firetruck", label: "FT-01", status: "deployed", location: "Zone D", assignedZone: "Zone D – West Hills", eta: 2, fuelLevel: 88, lat: 12.995, lng: 77.65 },
+  { id: "u5", type: "firetruck", label: "FT-02", status: "deployed", location: "Zone C", assignedZone: "Zone C – South Valley", eta: 11, fuelLevel: 55, lat: 12.95, lng: 77.62 },
+  { id: "u6", type: "rescue", label: "RSC-01", status: "deployed", location: "Zone B", assignedZone: "Zone B – East Harbor", eta: 3, fuelLevel: 71, lat: 12.988, lng: 77.592 },
+  { id: "u7", type: "rescue", label: "RSC-02", status: "available", location: "Base Station", fuelLevel: 100, lat: 12.97, lng: 77.61 },
+  { id: "u8", type: "supply", label: "SUP-01", status: "returning", location: "En Route", fuelLevel: 43, lat: 12.982, lng: 77.605 },
+  { id: "u9", type: "supply", label: "SUP-02", status: "deployed", location: "Zone E", assignedZone: "Zone E – Central Core", eta: 18, fuelLevel: 60, lat: 12.975, lng: 77.615 },
 ];
 
 const MOCK_SUPPLIES: SupplyItem[] = [

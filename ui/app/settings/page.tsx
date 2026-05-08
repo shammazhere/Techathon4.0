@@ -9,9 +9,9 @@ import {
   Bell,
   Save,
   RotateCcw,
-  Globe,
   Zap
 } from "lucide-react";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const SECTIONS = [
   {
@@ -74,6 +74,9 @@ function ToggleSwitch({ defaultOn }: { defaultOn: boolean }) {
 }
 
 export default function SettingsPage() {
+  const mapStyle = useSettingsStore((state) => state.mapStyle);
+  const setMapStyle = useSettingsStore((state) => state.setMapStyle);
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#050505] text-gray-200">
       <Navbar />
@@ -118,11 +121,18 @@ export default function SettingsPage() {
                         <label className="text-sm font-medium text-gray-400 group-hover:text-gray-200 transition-colors">
                           {field.label}
                         </label>
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           {field.type === "toggle" ? (
                             <ToggleSwitch defaultOn={field.default as boolean} />
                           ) : field.type === "select" ? (
-                            <select defaultValue={field.default as string}
+                            <select 
+                              value={field.label === "Map Style" ? mapStyle : undefined}
+                              defaultValue={field.label !== "Map Style" ? field.default as string : undefined}
+                              onChange={(e) => {
+                                if (field.label === "Map Style") {
+                                  setMapStyle(e.target.value);
+                                }
+                              }}
                               className="bg-[#050505] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-200 outline-none focus:border-blue-500/50 transition-all cursor-pointer">
                               {(field.options ?? []).map((o) => (
                                 <option key={o} value={o}>{o}</option>

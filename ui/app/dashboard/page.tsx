@@ -5,11 +5,19 @@ import Navbar from "@/components/Navbar";
 import AgentLogs from "@/components/AgentLogs";
 import DisasterTimeline from "@/components/DisasterTimeline";
 
+import { useEffect } from "react";
+import { startRealtimeSimulation } from "@/services/realtime";
+
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 const RiskHeatmap = dynamic(() => import("@/components/RiskHeatmap"), { ssr: false });
 const ResourceTracker = dynamic(() => import("@/components/ResourceTracker"), { ssr: false });
 
 export default function DashboardPage() {
+  useEffect(() => {
+    const stop = startRealtimeSimulation();
+    return () => stop();
+  }, []);
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#050505] text-gray-200 font-sans">
       <Navbar />

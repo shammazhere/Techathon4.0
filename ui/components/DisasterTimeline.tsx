@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useRiskStore, type DisasterType, type SeverityLevel } from "@/store/riskStore";
 import { Waves, Flame, Activity, AlertTriangle, ShieldAlert, Target, History, X } from "lucide-react";
 
@@ -28,12 +28,12 @@ const TYPE_OPTS: DisasterType[] = ["flood", "wildfire", "earthquake"];
 
 // Predefined trigger locations (lat/lng not shown on mock map, just labels)
 const TRIGGER_ZONES = [
-  { label: "Zone A – North District", lat: 37.80, lng: -122.43 },
-  { label: "Zone B – East Harbor", lat: 37.79, lng: -122.38 },
-  { label: "Zone C – South Valley", lat: 37.74, lng: -122.43 },
-  { label: "Zone D – West Hills", lat: 37.78, lng: -122.46 },
-  { label: "Zone E – Central Core", lat: 37.78, lng: -122.41 },
-  { label: "Zone F – Industrial", lat: 37.76, lng: -122.39 },
+  { label: "Zone A – North District", lat: 12.99, lng: 77.62 },
+  { label: "Zone B – East Harbor", lat: 12.98, lng: 77.59 },
+  { label: "Zone C – South Valley", lat: 12.94, lng: 77.63 },
+  { label: "Zone D – West Hills", lat: 12.98, lng: 77.56 },
+  { label: "Zone E – Central Core", lat: 12.97, lng: 77.59 },
+  { label: "Zone F – Industrial", lat: 12.96, lng: 77.59 },
 ];
 
 function formatRelative(d: Date): string {
@@ -50,6 +50,12 @@ export default function DisasterTimeline() {
   const [selZone, setSelZone] = useState(0);
   const [triggering, setTriggering] = useState(false);
   const [tab, setTab] = useState<"trigger" | "history">("trigger");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   async function handleTrigger() {
     setTriggering(true);
@@ -100,7 +106,7 @@ export default function DisasterTimeline() {
                       </span>
                     </div>
                     <div className="text-[10px] text-gray-400">
-                      Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {formatRelative(d.startTime)}
+                      Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {mounted ? formatRelative(d.startTime) : '---'}
                     </div>
                   </div>
                 </div>
@@ -254,7 +260,7 @@ export default function DisasterTimeline() {
                         </span>
                       </div>
                       <div className="text-[10px] text-gray-400">
-                        Pop: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • {formatRelative(d.startTime)}
+                        Pop: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • {mounted ? formatRelative(d.startTime) : '---'}
                       </div>
                     </div>
                   </div>

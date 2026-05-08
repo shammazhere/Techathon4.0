@@ -32,8 +32,15 @@ const PRIORITY_COLORS: Record<string, string> = {
   info: "text-emerald-400",
 };
 
-function LogEntry({ entry, index }: { entry: AgentLogEntry; index: number }) {
+function LogEntry({ entry }: { entry: AgentLogEntry }) {
   const [expanded, setExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
   const agentColorClass = AGENT_COLORS[entry.agentType] ?? "text-blue-400";
   const priorityColor = PRIORITY_COLORS[entry.priority] ?? "text-gray-400";
 
@@ -64,7 +71,7 @@ function LogEntry({ entry, index }: { entry: AgentLogEntry; index: number }) {
                 {entry.priority}
               </span>
               <span className="text-[9px] ml-auto font-mono text-gray-500">
-                {entry.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                {mounted ? entry.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : '---'}
               </span>
             </div>
             <div className="text-[11px] text-gray-300">
@@ -95,7 +102,7 @@ export default function AgentLogs() {
   const { logs, isSimulating, startSimulation, stopSimulation, clearLogs } = useRealtime();
   const [filter, setFilter] = useState<string>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll] = useState(true);
 
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
@@ -159,7 +166,7 @@ export default function AgentLogs() {
               </div>
             </div>
           ) : (
-            filtered.map((entry, i) => <LogEntry key={entry.id} entry={entry} index={i} />)
+            filtered.map((entry) => <LogEntry key={entry.id} entry={entry} />)
           )}
         </AnimatePresence>
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Ambulance, Truck, Helicopter, Flame, Package, Home, Activity, Check, X } from "lucide-react";
 import { useResourceStore } from "@/store/resourceStore";
 

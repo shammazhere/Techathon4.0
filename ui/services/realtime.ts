@@ -33,6 +33,25 @@ export function startRealtimeSimulation(): Unsubscribe {
         : u
     );
     useResourceStore.setState({ units: fuelUpdated });
+
+    // Jitter unit positions slightly to feel "live"
+    const unitsUpdatedWithCoords = updated.map(u => ({
+      ...u,
+      lat: u.lat ? u.lat + (Math.random() - 0.5) * 0.0002 : undefined,
+      lng: u.lng ? u.lng + (Math.random() - 0.5) * 0.0002 : undefined,
+    }));
+    useResourceStore.setState({ units: unitsUpdatedWithCoords });
+
+    // Jitter disaster positions slightly to feel "live"
+    const { activeDisasters } = useRiskStore.getState();
+    if (activeDisasters.length > 0) {
+      const jitteredDisasters = activeDisasters.map(d => ({
+        ...d,
+        lat: d.lat + (Math.random() - 0.5) * 0.0001,
+        lng: d.lng + (Math.random() - 0.5) * 0.0001,
+      }));
+      useRiskStore.setState({ activeDisasters: jitteredDisasters });
+    }
   };
 
   const interval = setInterval(tick, SIMULATION_INTERVAL);

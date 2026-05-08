@@ -12,12 +12,13 @@ export function useRealtime() {
   const cleanupRef = useRef<(() => void)[]>([]);
   const logIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Seed initial logs
+  // Seed initial logs on mount to avoid hydration mismatch
   useEffect(() => {
     const initial: AgentLogEntry[] = Array.from({ length: 8 }, (_, i) => ({
       ...generateLogEntry(),
       timestamp: new Date(Date.now() - (8 - i) * 12000),
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLogs(initial);
   }, []);
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useRiskStore } from "@/store/riskStore";
 import { useRouteStore } from "@/store/routeStore";
@@ -47,12 +46,12 @@ const radarData = [
 ];
 
 // ─── Tooltip styles ───────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: string | number; color: string }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card px-4 py-3 text-sm space-y-1.5 shadow-2xl border-white/10" style={{ minWidth: 150, background: "rgba(10, 15, 25, 0.9)" }}>
       <div className="font-semibold mb-2 text-gray-200">{label}</div>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <div key={p.name} className="flex justify-between gap-6">
           <span className="text-gray-400">{p.name}</span>
           <span style={{ color: p.color }} className="font-medium">{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</span>
@@ -224,7 +223,7 @@ export default function AnalyticsPage() {
                 {riskCells.map((c) => {
                   const oc = c.overallRisk >= 70 ? "text-red-400 bg-red-400/10 border-red-400/20" : c.overallRisk >= 40 ? "text-orange-400 bg-orange-400/10 border-orange-400/20" : "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
                   return (
-                    <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={c.id} className="hover:bg-white/2 transition-colors">
                       <td className="py-3 px-4 font-medium text-gray-200">{c.zone}</td>
                       <td className={`py-3 px-4 ${c.floodRisk >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.floodRisk}</td>
                       <td className={`py-3 px-4 ${c.fireRisk  >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}</td>
