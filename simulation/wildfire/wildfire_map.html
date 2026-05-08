@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_84e230c7bd3d68418924d653cf41b0b5 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    
+                    <style>
+                        .foliumtooltip {
+                            
+                        }
+                       .foliumtooltip table{
+                            margin: auto;
+                        }
+                        .foliumtooltip tr{
+                            text-align: left;
+                        }
+                        .foliumtooltip th{
+                            padding: 2px; padding-right: 8px;
+                        }
+                    </style>
+            
+    
+                    <style>
+                        .foliumpopup {
+                            margin: auto;
+                        }
+                       .foliumpopup table{
+                            margin: auto;
+                        }
+                        .foliumpopup tr{
+                            text-align: left;
+                        }
+                        .foliumpopup th{
+                            padding: 2px; padding-right: 8px;
+                        }
+                    </style>
+            
+</head>
+<body>
+    
+    
+    <div style="
+        position: fixed; bottom: 30px; left: 30px; z-index: 1000;
+        background: white; padding: 14px 18px; border-radius: 8px;
+        border: 1px solid #ccc; font-family: sans-serif; font-size: 13px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15); min-width: 200px;">
+      <b style="font-size:14px">Wildfire Map Legend</b><br><br>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:14px;height:14px;background:#FF2200;border-radius:50%;display:inline-block"></span>
+        NASA FIRMS Hotspot (high)
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:14px;height:14px;background:#FF6600;border-radius:50%;display:inline-block"></span>
+        NASA FIRMS Hotspot (nominal)
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:14px;height:14px;background:rgba(204,0,0,0.4);border:1px dashed #660000;display:inline-block"></span>
+        Fire Perimeter &lt;25% contained
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:14px;height:14px;background:rgba(255,187,0,0.4);border:1px dashed #660000;display:inline-block"></span>
+        Fire Perimeter &gt;75% contained
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:14px;height:14px;background:#FF4500;display:inline-block"></span>
+        DEVS-FIRE: Burning cell
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:14px;height:14px;background:#1a1a1a;display:inline-block"></span>
+        DEVS-FIRE: Burned cell
+      </div>
+      <hr style="margin:10px 0; border-color:#eee">
+      <small style="color:#888">
+        Circle size = Fire Radiative Power (MW)<br>
+        Data: NASA FIRMS + NIFC
+      </small>
+    </div>
+    
+    
+            <div class="folium-map" id="map_84e230c7bd3d68418924d653cf41b0b5" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_84e230c7bd3d68418924d653cf41b0b5 = L.map(
+                "map_84e230c7bd3d68418924d653cf41b0b5",
+                {
+                    center: [37.5, -119.5],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_36651c865a4b21c4399dd7cb9afe5d32 = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "OpenStreetMap",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_36651c865a4b21c4399dd7cb9afe5d32.addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+        
+    
+            var tile_layer_2038c2650c4afd693ddfecd9310c5eb2 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_2038c2650c4afd693ddfecd9310c5eb2.addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+        
+    
+            var tile_layer_26035dab75b1cc715c935341a46fc8ea = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_26035dab75b1cc715c935341a46fc8ea.addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+        
+    
+            var feature_group_b1e0e30093f6b69c5d9ff15500ffdf18 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_d2004e80e15f28817a31c5d217e536b8 = L.circleMarker(
+                [37.85, -119.5],
+                {"bubblingMouseEvents": true, "color": "#FF2200", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF2200", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6.78, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b1e0e30093f6b69c5d9ff15500ffdf18);
+        
+    
+        var popup_41566b81968cd3418bbf5822e6546ff6 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ad10284d709f43cde942c640097ccfa2 = $(`<div id="html_ad10284d709f43cde942c640097ccfa2" style="width: 100.0%; height: 100.0%;">         <b>Active Fire Hotspot</b><br>         Date: 2026-05-08<br>         Brightness: 320.5 K<br>         Fire Power: 45.2 MW<br>         Confidence: high         </div>`)[0];
+                popup_41566b81968cd3418bbf5822e6546ff6.setContent(html_ad10284d709f43cde942c640097ccfa2);
+            
+        
+
+        circle_marker_d2004e80e15f28817a31c5d217e536b8.bindPopup(popup_41566b81968cd3418bbf5822e6546ff6)
+        ;
+
+        
+    
+    
+            circle_marker_d2004e80e15f28817a31c5d217e536b8.bindTooltip(
+                `<div>
+                     FRP: 45 MW | high
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b94f31be809cd36020a8296b68f37007 = L.circleMarker(
+                [37.9, -119.4],
+                {"bubblingMouseEvents": true, "color": "#FF2200", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF2200", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.344999999999999, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b1e0e30093f6b69c5d9ff15500ffdf18);
+        
+    
+        var popup_2e370353b65600d875f462e263002f0c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_220f56c6fee999bf6a5ff4be3ca3b8dc = $(`<div id="html_220f56c6fee999bf6a5ff4be3ca3b8dc" style="width: 100.0%; height: 100.0%;">         <b>Active Fire Hotspot</b><br>         Date: 2026-05-08<br>         Brightness: 340.2 K<br>         Fire Power: 102.3 MW<br>         Confidence: high         </div>`)[0];
+                popup_2e370353b65600d875f462e263002f0c.setContent(html_220f56c6fee999bf6a5ff4be3ca3b8dc);
+            
+        
+
+        circle_marker_b94f31be809cd36020a8296b68f37007.bindPopup(popup_2e370353b65600d875f462e263002f0c)
+        ;
+
+        
+    
+    
+            circle_marker_b94f31be809cd36020a8296b68f37007.bindTooltip(
+                `<div>
+                     FRP: 102 MW | high
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_7a6a01bb27a6f0de480c9640dd729602 = L.circleMarker(
+                [37.78, -119.6],
+                {"bubblingMouseEvents": true, "color": "#FF6600", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF6600", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b1e0e30093f6b69c5d9ff15500ffdf18);
+        
+    
+        var popup_f15d4c9faa31966d0c2f9e0973de4dfe = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_af949b6daf9db27f2ada3ddf7e915d8d = $(`<div id="html_af949b6daf9db27f2ada3ddf7e915d8d" style="width: 100.0%; height: 100.0%;">         <b>Active Fire Hotspot</b><br>         Date: 2026-05-08<br>         Brightness: 315.8 K<br>         Fire Power: 28.7 MW<br>         Confidence: nominal         </div>`)[0];
+                popup_f15d4c9faa31966d0c2f9e0973de4dfe.setContent(html_af949b6daf9db27f2ada3ddf7e915d8d);
+            
+        
+
+        circle_marker_7a6a01bb27a6f0de480c9640dd729602.bindPopup(popup_f15d4c9faa31966d0c2f9e0973de4dfe)
+        ;
+
+        
+    
+    
+            circle_marker_7a6a01bb27a6f0de480c9640dd729602.bindTooltip(
+                `<div>
+                     FRP: 29 MW | nominal
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f9fef03f46d3fc986e893ab8a396e064 = L.circleMarker(
+                [38.1, -119.3],
+                {"bubblingMouseEvents": true, "color": "#FF2200", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF2200", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 25, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b1e0e30093f6b69c5d9ff15500ffdf18);
+        
+    
+        var popup_99209e4f294831cce2e59439c7059bbc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_600b694a29123f84fa91194868c9fa53 = $(`<div id="html_600b694a29123f84fa91194868c9fa53" style="width: 100.0%; height: 100.0%;">         <b>Active Fire Hotspot</b><br>         Date: 2026-05-08<br>         Brightness: 380.0 K<br>         Fire Power: 215.6 MW<br>         Confidence: high         </div>`)[0];
+                popup_99209e4f294831cce2e59439c7059bbc.setContent(html_600b694a29123f84fa91194868c9fa53);
+            
+        
+
+        circle_marker_f9fef03f46d3fc986e893ab8a396e064.bindPopup(popup_99209e4f294831cce2e59439c7059bbc)
+        ;
+
+        
+    
+    
+            circle_marker_f9fef03f46d3fc986e893ab8a396e064.bindTooltip(
+                `<div>
+                     FRP: 216 MW | high
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3c2776dae03beb4feca3b4d6539002b6 = L.circleMarker(
+                [37.65, -119.7],
+                {"bubblingMouseEvents": true, "color": "#FF9900", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF9900", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b1e0e30093f6b69c5d9ff15500ffdf18);
+        
+    
+        var popup_44665dcfdefed68105f4c8a94f2a33aa = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_07654e0cb54b8122f9e7c07479ce162c = $(`<div id="html_07654e0cb54b8122f9e7c07479ce162c" style="width: 100.0%; height: 100.0%;">         <b>Active Fire Hotspot</b><br>         Date: 2026-05-08<br>         Brightness: 295.4 K<br>         Fire Power: 12.1 MW<br>         Confidence: low         </div>`)[0];
+                popup_44665dcfdefed68105f4c8a94f2a33aa.setContent(html_07654e0cb54b8122f9e7c07479ce162c);
+            
+        
+
+        circle_marker_3c2776dae03beb4feca3b4d6539002b6.bindPopup(popup_44665dcfdefed68105f4c8a94f2a33aa)
+        ;
+
+        
+    
+    
+            circle_marker_3c2776dae03beb4feca3b4d6539002b6.bindTooltip(
+                `<div>
+                     FRP: 12 MW | low
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_b1e0e30093f6b69c5d9ff15500ffdf18.addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+        
+    
+            var feature_group_dc9fddbecc5b4c0b68e8fd0bc39493de = L.featureGroup(
+                {
+}
+            );
+        
+    
+        function geo_json_79ddba4361682c0554c6e587c72e5bff_styler(feature) {
+            switch(feature.properties.IncidentName) {
+                default:
+                    return {"color": "#660000", "dashArray": "4 4", "fillColor": "#FF4400", "fillOpacity": 0.35, "weight": 2};
+            }
+        }
+        function geo_json_79ddba4361682c0554c6e587c72e5bff_highlighter(feature) {
+            switch(feature.properties.IncidentName) {
+                default:
+                    return {"color": "#FF0000", "fillOpacity": 0.5, "weight": 3};
+            }
+        }
+
+        function geo_json_79ddba4361682c0554c6e587c72e5bff_onEachFeature(feature, layer) {
+
+            layer.on({
+                mouseout: function(e) {
+                    if(typeof e.target.setStyle === "function"){
+                            geo_json_79ddba4361682c0554c6e587c72e5bff.resetStyle(e.target);
+                    }
+                },
+                mouseover: function(e) {
+                    if(typeof e.target.setStyle === "function"){
+                        const highlightStyle = geo_json_79ddba4361682c0554c6e587c72e5bff_highlighter(e.target.feature)
+                        e.target.setStyle(highlightStyle);
+                    }
+                },
+            });
+        };
+        var geo_json_79ddba4361682c0554c6e587c72e5bff = L.geoJson(null, {
+                onEachFeature: geo_json_79ddba4361682c0554c6e587c72e5bff_onEachFeature,
+            
+                style: geo_json_79ddba4361682c0554c6e587c72e5bff_styler,
+            ...{
+}
+        });
+
+        function geo_json_79ddba4361682c0554c6e587c72e5bff_add (data) {
+            geo_json_79ddba4361682c0554c6e587c72e5bff
+                .addData(data);
+        }
+            geo_json_79ddba4361682c0554c6e587c72e5bff_add({"features": [{"geometry": {"coordinates": [[[-119.55, 37.82], [-119.45, 37.82], [-119.45, 37.92], [-119.55, 37.92], [-119.55, 37.82]]], "type": "Polygon"}, "properties": {"GISAcres": 5200, "IncidentName": "Sample Fire (Demo)", "ModifiedOnDateTime_dt": "2026-05-08T20:48:33.951680", "PercentContained": 45}, "type": "Feature"}], "type": "FeatureCollection"});
+
+        
+    
+    geo_json_79ddba4361682c0554c6e587c72e5bff.bindTooltip(
+    function(layer){
+    let div = L.DomUtil.create('div');
+    
+    let handleObject = feature => {
+        if (feature === null) {
+            return '';
+        } else if (typeof(feature)=='object') {
+            return JSON.stringify(feature);
+        } else {
+            return feature;
+        }
+    }
+    let fields = ["IncidentName"];
+    let aliases = [""];
+    let table = '<table>' +
+        String(
+        fields.map(
+        (v,i)=>
+        `<tr>
+            <th>${aliases[i]}</th>
+            
+            <td>${handleObject(layer.feature.properties[v])}</td>
+        </tr>`).join(''))
+    +'</table>';
+    div.innerHTML=table;
+    
+    return div
+    }
+    ,{
+  "sticky": true,
+  "className": "foliumtooltip",
+});
+                     
+    
+    geo_json_79ddba4361682c0554c6e587c72e5bff.bindPopup(
+    function(layer){
+    let div = L.DomUtil.create('div');
+    
+    let handleObject = feature => {
+        if (feature === null) {
+            return '';
+        } else if (typeof(feature)=='object') {
+            return JSON.stringify(feature);
+        } else {
+            return feature;
+        }
+    }
+    let fields = ["IncidentName", "GISAcres", "PercentContained"];
+    let aliases = ["Fire Name", "Acres", "% Contained"];
+    let table = '<table>' +
+        String(
+        fields.map(
+        (v,i)=>
+        `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+            
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`).join(''))
+    +'</table>';
+    div.innerHTML=table;
+    
+    return div
+    }
+    ,{
+  "className": "foliumpopup",
+});
+                     
+    
+            geo_json_79ddba4361682c0554c6e587c72e5bff.addTo(feature_group_dc9fddbecc5b4c0b68e8fd0bc39493de);
+        
+    
+            feature_group_dc9fddbecc5b4c0b68e8fd0bc39493de.addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+        
+    
+            var layer_control_7386f81b3e428f69f341b34151920857_layers = {
+                base_layers : {
+                    "Street Map" : tile_layer_36651c865a4b21c4399dd7cb9afe5d32,
+                    "Satellite" : tile_layer_2038c2650c4afd693ddfecd9310c5eb2,
+                    "Topographic" : tile_layer_26035dab75b1cc715c935341a46fc8ea,
+                },
+                overlays :  {
+                    "\ud83d\udd25 Active Fire (NASA FIRMS)" : feature_group_b1e0e30093f6b69c5d9ff15500ffdf18,
+                    "\ud83d\uddfa\ufe0f Fire Perimeters (NIFC)" : feature_group_dc9fddbecc5b4c0b68e8fd0bc39493de,
+                },
+            };
+            let layer_control_7386f81b3e428f69f341b34151920857 = L.control.layers(
+                layer_control_7386f81b3e428f69f341b34151920857_layers.base_layers,
+                layer_control_7386f81b3e428f69f341b34151920857_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_84e230c7bd3d68418924d653cf41b0b5);
+
+        
+</script>
+</html>
