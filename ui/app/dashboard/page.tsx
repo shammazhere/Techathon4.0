@@ -12,8 +12,13 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 const RiskHeatmap = dynamic(() => import("@/components/RiskHeatmap"), { ssr: false });
 const ResourceTracker = dynamic(() => import("@/components/ResourceTracker"), { ssr: false });
 
+import { useRealtime } from "@/hooks/useRealtime";
+
 export default function DashboardPage() {
+  const { logs, startSimulation } = useRealtime();
+
   useEffect(() => {
+    // We could still run jitter for aesthetics, but let's prioritize live data
     const stop = startRealtimeSimulation();
     return () => stop();
   }, []);
@@ -60,7 +65,16 @@ export default function DashboardPage() {
             </div>
             {/* Bottom: Agent logs */}
             <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl flex flex-col">
-              <AgentLogs />
+              <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">System Logs</h3>
+                <button 
+                  onClick={startSimulation}
+                  className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 rounded text-[10px] font-bold text-red-400 transition-colors uppercase tracking-tight"
+                >
+                  Start Simulation
+                </button>
+              </div>
+              <AgentLogs logs={logs} />
             </div>
           </aside>
 
@@ -76,7 +90,7 @@ import { useRouteStore } from "@/store/routeStore";
 import { useResourceStore } from "@/store/resourceStore";
 
 function KpiBar() {
-  const { activeDisasters, riskCells, totalAffected } = useRiskStore();
+  const { activeDisasters, riskCells, totalAffected, weather } = useRiskStore();
   const { evacueesMoved, reroutedVehicles } = useRouteStore();
   const { units } = useResourceStore();
 
@@ -86,10 +100,10 @@ function KpiBar() {
     : 0;
 
   const kpis = [
-    { label: "Active Incidents", value: activeDisasters.length.toString(), color: activeDisasters.length > 0 ? "text-red-400" : "text-gray-300" },
+    { label: "Weather", value: `${weather.temp}°C / ${weather.description}`, color: "text-blue-300" },
+    { label: "Wind/Humid", value: `${weather.windSpeed}m/s / ${weather.humidity}%`, color: "text-blue-200" },
     { label: "Affected People", value: totalAffected.toLocaleString(), color: totalAffected > 0 ? "text-orange-400" : "text-gray-300" },
     { label: "Evacuees Moved", value: evacueesMoved.toLocaleString(), color: "text-emerald-400" },
-    { label: "Vehicles Rerouted", value: reroutedVehicles.toLocaleString(), color: "text-blue-400" },
     { label: "Units Deployed", value: `${deployed}/${units.length}`, color: "text-indigo-400" },
     { label: "Avg City Risk", value: `${avgRisk}%`, color: avgRisk > 60 ? "text-red-400" : avgRisk > 30 ? "text-orange-400" : "text-gray-300" },
   ];

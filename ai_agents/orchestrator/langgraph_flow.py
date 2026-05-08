@@ -16,10 +16,11 @@ state cascades naturally from one agent to the next.
 
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
-from .event_dispatcher import EventDispatcher
+from .event_dispatcher import event_dispatcher
 
 
 class AgentState(TypedDict):
+# ... (rest of the file remains same, but self.dispatcher must point to the global one)
     disaster: Dict[str, Any]
     routes: List[Dict[str, Any]]
     resources: List[Dict[str, Any]]
@@ -31,7 +32,7 @@ class AgentState(TypedDict):
 
 class OrchestratorFlow:
     def __init__(self):
-        self.dispatcher = EventDispatcher()
+        self.dispatcher = event_dispatcher
         self.graph = self.build_graph()
 
     def build_graph(self):
@@ -225,35 +226,20 @@ class OrchestratorFlow:
         }
         return self.graph.invoke(initial_state)
 
-    def start_disaster_session(self, disaster_type: str):
+    def start_disaster_session(self, disaster_data: dict):
         """
         Entry point called by simulation_service.py.
-        Accepts disaster data from the hardcoded scenarios
+        Accepts dynamic disaster data from the optimization engine
         and runs the full agent pipeline.
         """
+        disaster_type = disaster_data.get("type", "unknown")
         print(f"[Orchestrator] Starting {disaster_type} disaster session...")
 
         from shared.sample_graph import reset_city_graph
         reset_city_graph()  # fresh graph for each new session
 
-        # Build disaster payload matching simulation_service.py schema
-        disaster_payloads = {
-            "flood": {
-                "type": "flood",
-                "center": [9.9601, 76.2676],
-                "blocked_areas": ["Thevara Canal mouth", "Mattancherry waterfront", "Willingdon Island"],
-                "severity": "CRITICAL",
-            },
-            "wildfire": {
-                "type": "wildfire",
-                "center": [11.6833, 76.0833],
-                "blocked_areas": ["Western Ghats", "Tea plantations", "Forest roads"],
-                "severity": "EXTREME",
-            },
-        }
-
         initial_state: AgentState = {
-            "disaster": disaster_payloads.get(disaster_type, {"type": disaster_type, "center": [9.9601, 76.2676]}),
+            "disaster": disaster_data,
             "routes": [],
             "resources": [],
             "rescues": [],

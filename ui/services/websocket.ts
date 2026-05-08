@@ -86,5 +86,5 @@ class WebSocketService {
   }
 }
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws";
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/ws/disaster";
 export const wsService = new WebSocketService(WS_URL);

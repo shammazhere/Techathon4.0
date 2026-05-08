@@ -58,15 +58,15 @@ from optimization.scoring.hospital_overload import batch_assess_hospitals, get_o
 from optimization.scoring.shelter_occupancy import batch_assess_shelters, get_shelter_summary
 from optimization.scoring.vulnerability_score import batch_calculate_vulnerability
 
+# Live Data Services
+from backend.services.resource_simulator import resource_simulator
+
 # Shared city graph
 from shared.sample_graph import (
     get_city_graph,
     reset_city_graph,
-    SIMULATED_AMBULANCES,
-    SIMULATED_INCIDENTS,
-    SIMULATED_HOSPITALS,
-    SIMULATED_SHELTERS,
 )
+
 
 
 # ---------------------------------------------------------------------------
@@ -247,9 +247,11 @@ def dispatch_resources(
     if graph is None:
         graph = get_city_graph()
 
+    live_data = resource_simulator.get_live_resources()
     if ambulances is None:
-        ambulances = SIMULATED_AMBULANCES
+        ambulances = live_data["ambulances"]
     if incidents is None:
+        from shared.sample_graph import SIMULATED_INCIDENTS
         incidents = SIMULATED_INCIDENTS
 
     # Build typed objects
@@ -329,7 +331,7 @@ def get_hospital_status(
     Uses simulation_service.py hardcoded hospital data.
     """
     if hospitals is None:
-        hospitals = SIMULATED_HOSPITALS
+        hospitals = resource_simulator.get_live_resources()["hospitals"]
 
     assessed = batch_assess_hospitals(hospitals)
     alerts = get_overload_alerts(hospitals)
@@ -349,7 +351,7 @@ def get_shelter_status(
     Uses simulation_service.py hardcoded shelter data.
     """
     if shelters is None:
-        shelters = SIMULATED_SHELTERS
+        shelters = resource_simulator.get_live_resources()["shelters"]
 
     return get_shelter_summary(shelters)
 

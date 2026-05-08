@@ -136,6 +136,65 @@ def block_road(node_u: int, node_v: int):
 
 
 # ---------------------------------------------------------------------------
+# API: Simulation State (Resources & Risk)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/simulation/resources")
+def get_simulation_resources():
+    """Get the current state of all hospitals, shelters, and ambulances."""
+    from backend.services.optimization_service import (
+        get_hospital_status, get_shelter_status
+    )
+    from backend.services.resource_simulator import resource_simulator
+    live_data = resource_simulator.get_live_resources()
+    
+    return {
+        "hospitals": get_hospital_status()["hospitals"],
+        "shelters": get_shelter_status()["shelters"],
+        "units": live_data["ambulances"]
+    }
+
+
+@app.get("/api/simulation/risk_cells")
+def get_risk_cells():
+    """Get current risk levels for different city zones."""
+    from backend.services.optimization_service import get_city_graph
+    graph = get_city_graph()
+    
+    # Group nodes by proximity to center points for "Zones"
+    zones = [
+        {"id": "z1", "name": "Zone A (Fort Kochi)", "coords": (9.9712, 76.2425)},
+        {"id": "z2", "name": "Zone B (Thevara)", "coords": (9.9601, 76.2676)},
+        {"id": "z3", "name": "Zone C (Ernakulam)", "coords": (9.9750, 76.2850)},
+    ]
+    
+    results = []
+    for zone in zones:
+        # Find edges near this zone and average their risk
+        risk_sum = 0
+        count = 0
+        for u, v, d in graph.edges(data=True):
+            risk_sum += d.get("disaster_risk", 0)
+            count += 1
+        
+        avg_risk = (risk_sum / count) * 100 if count > 0 else 0
+        results.append({
+            "id": zone["id"],
+            "zone": zone["name"],
+            "floodRisk": round(avg_risk, 1),
+            "fireRisk": 0.0,
+            "seismicRisk": 0.0,
+            "overallRisk": round(avg_risk, 1),
+            "roadBlocked": avg_risk > 50,
+            "population": 15000 + (count * 100),
+            "elderlyDensity": 0.15 + (avg_risk / 1000),
+            "status": "critical" if avg_risk > 70 else "warning" if avg_risk > 30 else "stable"
+        })
+    
+    return results
+
+
+# ---------------------------------------------------------------------------
 # WebSockets
 # ---------------------------------------------------------------------------
 

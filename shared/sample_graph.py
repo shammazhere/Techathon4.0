@@ -134,6 +134,16 @@ def build_kochi_graph() -> nx.Graph:
     When Person 1 delivers the real graph, replace this function's
     body with their loader — everything else stays the same.
     """
+    # Try to load real GIS graph first
+    try:
+        from backend.engines.gis.gis_manager import gis_manager
+        real_g = gis_manager.load_city_graph("Kochi, Kerala")
+        if real_g.number_of_nodes() > 50: # Ensure it's a decent graph
+            print("[Graph] Successfully loaded real OSMnx graph for Kochi")
+            return real_g
+    except Exception as e:
+        print(f"[Graph] Falling back to sample graph: {e}")
+
     G = nx.Graph()
 
     # Add nodes with coordinates and metadata

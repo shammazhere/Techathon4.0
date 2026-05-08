@@ -1,17 +1,13 @@
 // ─── API Service ────────────────────────────────────────────────────────────
-// All backend endpoints are defined here. During hackathon demo, these
-// functions return mock data with simulated latency.
+// Connects to the real FastAPI backend.
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export interface ApiResponse<T> {
   data: T;
-  status: "ok" | "error";
+  status: "ok" | "error" | "success";
   message?: string;
 }
-
-// Simulate network delay
-const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
 async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   try {
@@ -21,94 +17,53 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
-  } catch {
-    // Fallback: return undefined (caller handles mock data)
-    return undefined as T;
+  } catch (error) {
+    console.error(`API Fetch Error [${endpoint}]:`, error);
+    throw error;
   }
 }
 
 // ─── Disaster API ────────────────────────────────────────────────────────────
 export const disasterApi = {
   async getActiveDisasters() {
-    await delay();
-    return apiFetch("/api/disasters/active");
+    return apiFetch("/api/disaster/status");
   },
 
   async triggerDisaster(payload: {
     type: string;
-    lat: number;
-    lng: number;
-    severity: string;
+    lat?: number;
+    lng?: number;
+    severity?: string;
   }) {
-    await delay(600);
-    return apiFetch("/api/disasters/trigger", {
+    // We hit the orchestrator endpoint to trigger the full pipeline
+    return apiFetch(`/disaster/start?type=${payload.type}`, {
       method: "POST",
-      body: JSON.stringify(payload),
     });
-  },
-
-  async getSpreadSimulation(disasterId: string) {
-    await delay(800);
-    return apiFetch(`/api/disasters/${disasterId}/spread`);
   },
 };
 
-// ─── Route API ───────────────────────────────────────────────────────────────
+// ─── Route API (Live Rerouting) ──────────────────────────────────────────────
 export const routeApi = {
-  async getEvacuationRoutes(fromZone: string) {
-    await delay();
-    return apiFetch(`/api/routes/evacuation?zone=${fromZone}`);
+  async startTracking() {
+    return apiFetch("/api/reroute/start_tracking", { method: "POST" });
   },
 
-  async computeOptimalRoute(payload: { from: string; to: string; avoid: string[] }) {
-    await delay(1200);
-    return apiFetch("/api/routes/optimize", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+  async tickSimulation() {
+    return apiFetch("/api/reroute/tick", { method: "POST" });
   },
 
-  async getTrafficStatus() {
-    await delay(300);
-    return apiFetch("/api/traffic/status");
-  },
+  async blockRoad(nodeU: number, nodeV: number) {
+    return apiFetch(`/api/reroute/block_road?node_u=${nodeU}&node_v=${nodeV}`, { method: "POST" });
+  }
 };
 
-// ─── Resource API ─────────────────────────────────────────────────────────────
-export const resourceApi = {
-  async getShelters() {
-    await delay();
-    return apiFetch("/api/shelters");
+// ─── Simulation API (Live State) ─────────────────────────────────────────────
+export const simulationApi = {
+  async getResources() {
+    return apiFetch("/api/simulation/resources");
   },
 
-  async getUnits() {
-    await delay();
-    return apiFetch("/api/units");
-  },
-
-  async allocateUnit(unitId: string, zone: string) {
-    await delay(500);
-    return apiFetch("/api/units/allocate", {
-      method: "POST",
-      body: JSON.stringify({ unitId, zone }),
-    });
-  },
-};
-
-// ─── AI Agent API ─────────────────────────────────────────────────────────────
-export const agentApi = {
-  async getAgentLogs(limit = 20) {
-    await delay();
-    return apiFetch(`/api/agents/logs?limit=${limit}`);
-  },
-
-  async getExplanation(actionId: string) {
-    await delay(1500);
-    return apiFetch(`/api/agents/explain/${actionId}`);
-  },
-
-  async runAgentCycle() {
-    await delay(2000);
-    return apiFetch("/api/agents/run", { method: "POST" });
-  },
+  async getRiskCells() {
+    return apiFetch("/api/simulation/risk_cells");
+  }
 };
