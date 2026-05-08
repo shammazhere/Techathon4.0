@@ -2,22 +2,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #020408;
-  --bg-secondary: #070d14;
-  --bg-card: rgba(8, 18, 30, 0.85);
-  --bg-card-hover: rgba(12, 28, 46, 0.9);
-  --border-primary: rgba(0, 210, 255, 0.15);
-  --border-accent: rgba(0, 210, 255, 0.4);
-  --neon-cyan: #00d2ff;
-  --neon-blue: #0080ff;
+  --bg-primary: #0A0C10;
+  --bg-secondary: #111318;
+  --bg-card: rgba(17, 19, 24, 0.65);
+  --bg-card-hover: rgba(26, 28, 32, 0.85);
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-accent: rgba(0, 242, 255, 0.4);
+  --neon-cyan: #00F2FF;
+  --neon-blue: #0066FF;
   --neon-purple: #7c3aed;
-  --neon-red: #ff3b3b;
-  --neon-orange: #ff6b35;
-  --neon-green: #00ff88;
-  --neon-yellow: #ffd700;
-  --text-primary: #e8f4fd;
-  --text-secondary: #8bb8d4;
-  --text-muted: #4a7a9b;
+  --neon-red: #FF3B30;
+  --neon-orange: #FF9500;
+  --neon-green: #34C759;
+  --neon-yellow: #FFD60A;
+  --text-primary: #e2e2e8;
+  --text-secondary: #b9cacb;
+  --text-muted: #849495;
   --danger: #ff3b3b;
   --warning: #ff9500;
   --success: #00ff88;

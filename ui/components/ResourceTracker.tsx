@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Ambulance, Truck, Helicopter, Flame, Package, Home, Activity, Check, X } from "lucide-react";
 import { useResourceStore } from "@/store/resourceStore";
 
-const UNIT_ICONS: Record<string, string> = {
-  ambulance: "🚑", firetruck: "🚒", rescue: "🚁", supply: "🚛",
+const UNIT_ICONS: Record<string, React.ReactNode> = {
+  ambulance: <Ambulance size={12} />,
+  firetruck: <Flame size={12} />,
+  rescue: <Helicopter size={12} />,
+  supply: <Truck size={12} />,
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  available: "#00ff88", deployed: "#00d2ff", returning: "#ffd700", offline: "#4a7a9b",
+  available: "text-emerald-400", deployed: "text-blue-400", returning: "text-amber-400", offline: "text-gray-500",
 };
 
 export default function ResourceTracker() {
@@ -20,30 +24,27 @@ export default function ResourceTracker() {
   const availableCount = units.filter((u) => u.status === "available").length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-transparent text-gray-200">
       {/* Header */}
-      <div className="px-4 py-3 border-b shrink-0" style={{ borderColor: "rgba(0,210,255,0.12)" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-bold tracking-wide neon-cyan">📦 RESOURCE OPS</span>
+      <div className="px-4 py-3 border-b border-white/5 shrink-0 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Package size={14} className="text-gray-400" />
+          <span className="text-xs font-semibold tracking-wide text-gray-200">RESOURCE OPS</span>
         </div>
-        <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-          <span><span className="neon-cyan font-bold">{deployedCount}</span> deployed</span>
-          <span><span className="neon-green font-bold">{availableCount}</span> available</span>
-          <span><span className="neon-yellow font-bold">{units.filter(u => u.status === "returning").length}</span> returning</span>
+        <div className="flex gap-3 text-[10px] text-gray-500 font-medium">
+          <span><span className="text-blue-400 font-semibold">{deployedCount}</span> deployed</span>
+          <span><span className="text-emerald-400 font-semibold">{availableCount}</span> avail</span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex px-3 gap-1.5 py-2 shrink-0">
+      <div className="flex px-3 gap-1 py-3 shrink-0">
         {(["units", "shelters", "supplies"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className="flex-1 py-1.5 rounded text-xs font-semibold tracking-widest uppercase transition-all"
-            style={{
-              background: tab === t ? "rgba(0,210,255,0.15)" : "transparent",
-              color: tab === t ? "var(--neon-cyan)" : "var(--text-muted)",
-              border: `1px solid ${tab === t ? "rgba(0,210,255,0.3)" : "rgba(255,255,255,0.06)"}`,
-            }}>
-            {t === "units" ? "🚑" : t === "shelters" ? "🏠" : "📊"} {t}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-colors ${tab === t ? "bg-white/10 text-white" : "bg-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5"
+              }`}>
+            {t === "units" ? <Ambulance size={12} /> : t === "shelters" ? <Home size={12} /> : <Package size={12} />}
+            {t}
           </button>
         ))}
       </div>
@@ -51,44 +52,40 @@ export default function ResourceTracker() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto side-panel px-3 pb-3 space-y-2">
         {tab === "units" && units.map((unit) => {
-          const sc = STATUS_COLORS[unit.status] ?? "#4a7a9b";
+          const sc = STATUS_COLORS[unit.status] ?? "text-gray-400";
           return (
-            <div key={unit.id} className="glass-card p-3">
+            <div key={unit.id} className="bg-[#111318]/40 border border-transparent p-3 rounded-lg hover:bg-white/5 transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">{UNIT_ICONS[unit.type]}</span>
+                  <div className={`mt-0.5 ${sc}`}>{UNIT_ICONS[unit.type]}</div>
                   <div>
-                    <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{unit.label}</div>
-                    <div className="text-xs" style={{ color: "var(--text-muted)", fontSize: 10 }}>{unit.location}</div>
+                    <div className="text-[11px] font-medium text-gray-300">{unit.label}</div>
                   </div>
                 </div>
-                <span className="badge text-xs font-bold px-2 py-0.5 rounded"
-                  style={{ color: sc, background: `${sc}1a`, border: `1px solid ${sc}44` }}>
-                  {unit.status.toUpperCase()}
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-white/5 ${sc}`}>
+                  {unit.status}
                 </span>
               </div>
-              {unit.assignedZone && (
-                <div className="text-xs mb-2 flex items-center gap-1" style={{ color: "var(--text-muted)" }}>
-                  <span>→</span>
-                  <span style={{ color: "var(--neon-cyan)" }}>{unit.assignedZone}</span>
-                  {unit.eta !== undefined && (
-                    <span className="ml-auto font-mono" style={{ color: "#ffd700" }}>{unit.eta} min</span>
-                  )}
+
+              <div className="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+                <div className="flex items-center gap-1">
+                  <Activity size={10} />
+                  <span>{unit.assignedZone || unit.location}</span>
                 </div>
-              )}
+                {unit.eta !== undefined && (
+                  <span className="font-mono text-gray-400">{unit.eta}m ETA</span>
+                )}
+              </div>
+
               {/* Fuel bar */}
               <div>
-                <div className="flex justify-between text-xs mb-1" style={{ color: "var(--text-muted)", fontSize: 10 }}>
+                <div className="flex justify-between text-[9px] mb-1 font-medium uppercase tracking-widest text-gray-500">
                   <span>Fuel</span>
-                  <span style={{ color: unit.fuelLevel < 30 ? "#ff3b3b" : "var(--text-secondary)" }}>{Math.round(unit.fuelLevel)}%</span>
+                  <span className={unit.fuelLevel < 30 ? "text-red-400" : "text-gray-400"}>{Math.round(unit.fuelLevel)}%</span>
                 </div>
-                <div className="progress-bar" style={{ height: 4 }}>
-                  <div className="progress-fill" style={{
-                    width: `${unit.fuelLevel}%`,
-                    background: unit.fuelLevel < 30
-                      ? "linear-gradient(to right,#ff3b3b88,#ff3b3b)"
-                      : "linear-gradient(to right,#00d2ff66,#00d2ff)",
-                  }} />
+                <div className="h-[2px] rounded-full bg-white/5 overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${unit.fuelLevel < 30 ? "bg-red-500" : "bg-blue-400"}`}
+                    style={{ width: `${unit.fuelLevel}%` }} />
                 </div>
               </div>
             </div>
@@ -97,30 +94,33 @@ export default function ResourceTracker() {
 
         {tab === "shelters" && shelters.map((s) => {
           const pct = Math.round((s.occupied / s.capacity) * 100);
-          const col = pct >= 100 ? "#ff3b3b" : pct >= 85 ? "#ff9500" : "#00ff88";
+          const colClass = pct >= 100 ? "text-red-400" : pct >= 85 ? "text-amber-400" : "text-emerald-400";
+          const barColor = pct >= 100 ? "bg-red-500" : pct >= 85 ? "bg-amber-500" : "bg-emerald-500";
           return (
-            <div key={s.id} className="glass-card p-3">
+            <div key={s.id} className="bg-[#111318]/40 border border-transparent p-3 rounded-lg hover:bg-white/5 transition-colors">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{s.name}</span>
-                <span className="badge text-xs font-bold px-2 py-0.5 rounded"
-                  style={{ color: col, background: `${col}1a`, border: `1px solid ${col}44` }}>
-                  {s.status.toUpperCase()}
+                <span className="text-[11px] font-medium text-gray-300">{s.name}</span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-white/5 ${colClass}`}>
+                  {s.status}
                 </span>
               </div>
-              <div className="flex justify-between text-xs mb-1">
-                <span style={{ color: "var(--text-muted)" }}>Occupancy</span>
-                <span style={{ color: col }} className="font-bold">{s.occupied.toLocaleString()} / {s.capacity.toLocaleString()}</span>
+              <div className="flex justify-between text-[9px] mb-1 font-medium tracking-widest uppercase text-gray-500">
+                <span>Occupancy</span>
+                <span className={colClass}>{s.occupied.toLocaleString()} / {s.capacity.toLocaleString()}</span>
               </div>
-              <div className="progress-bar mb-2" style={{ height: 6 }}>
-                <div className="progress-fill" style={{
-                  width: `${pct}%`,
-                  background: `linear-gradient(to right,${col}66,${col})`,
-                }} />
+              <div className="h-[2px] rounded-full bg-white/5 overflow-hidden mb-3">
+                <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
-              <div className="flex gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
-                <span>{s.hasmedical ? "✅" : "❌"} Medical</span>
-                <span>{s.hasfood ? "✅" : "❌"} Food</span>
-                <span className="ml-auto font-bold" style={{ color: col }}>{pct}% full</span>
+              <div className="flex items-center gap-3 text-[9px] text-gray-500 uppercase tracking-widest font-medium">
+                <span className="flex items-center gap-1">
+                  {s.hasmedical ? <Check size={10} className="text-emerald-400" /> : <X size={10} className="text-gray-600" />}
+                  Med
+                </span>
+                <span className="flex items-center gap-1">
+                  {s.hasfood ? <Check size={10} className="text-emerald-400" /> : <X size={10} className="text-gray-600" />}
+                  Food
+                </span>
+                <span className={`ml-auto font-bold ${colClass}`}>{pct}% full</span>
               </div>
             </div>
           );
@@ -129,22 +129,19 @@ export default function ResourceTracker() {
         {tab === "supplies" && supplies.map((item) => {
           const pct = Math.round((item.deployed / item.total) * 100);
           return (
-            <div key={item.category} className="glass-card p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">{item.icon}</span>
+            <div key={item.category} className="bg-[#111318]/40 border border-transparent p-3 rounded-lg hover:bg-white/5 transition-colors">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="text-lg opacity-80">{item.icon}</div>
                 <div className="flex-1">
-                  <div className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{item.category}</div>
-                  <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {item.deployed.toLocaleString()} / {item.total.toLocaleString()} {item.unit} deployed
+                  <div className="text-[11px] font-medium text-gray-300 mb-0.5">{item.category}</div>
+                  <div className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">
+                    <span className="text-gray-400">{item.deployed.toLocaleString()}</span> / {item.total.toLocaleString()} {item.unit}
                   </div>
                 </div>
-                <span className="text-xs font-bold" style={{ color: item.color }}>{pct}%</span>
+                <span className="text-[10px] font-bold" style={{ color: item.color }}>{pct}%</span>
               </div>
-              <div className="progress-bar" style={{ height: 5 }}>
-                <div className="progress-fill" style={{
-                  width: `${pct}%`,
-                  background: `linear-gradient(to right,${item.color}55,${item.color})`,
-                }} />
+              <div className="h-[2px] rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: item.color }} />
               </div>
             </div>
           );

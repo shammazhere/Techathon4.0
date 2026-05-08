@@ -8,8 +8,11 @@ import { useResourceStore } from "@/store/resourceStore";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import {
+  Activity, ShieldAlert, Ambulance, Route, Package
+} from "lucide-react";
 
 // ─── Mock time-series data ───────────────────────────────────────────────────
 const HOURS = Array.from({ length: 12 }, (_, i) => `${String(i * 2).padStart(2, "0")}:00`);
@@ -47,12 +50,12 @@ const radarData = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass-card px-3 py-2 text-xs space-y-1" style={{ minWidth: 130 }}>
-      <div className="font-bold mb-1" style={{ color: "var(--neon-cyan)" }}>{label}</div>
+    <div className="glass-card px-4 py-3 text-sm space-y-1.5 shadow-2xl border-white/10" style={{ minWidth: 150, background: "rgba(10, 15, 25, 0.9)" }}>
+      <div className="font-semibold mb-2 text-gray-200">{label}</div>
       {payload.map((p: any) => (
-        <div key={p.name} className="flex justify-between gap-4">
-          <span style={{ color: "var(--text-muted)" }}>{p.name}</span>
-          <span style={{ color: p.color }} className="font-bold">{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</span>
+        <div key={p.name} className="flex justify-between gap-6">
+          <span className="text-gray-400">{p.name}</span>
+          <span style={{ color: p.color }} className="font-medium">{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</span>
         </div>
       ))}
     </div>
@@ -62,9 +65,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ─── Chart card wrapper ───────────────────────────────────────────────────────
 function ChartCard({ title, children, span = 1 }: { title: string; children: React.ReactNode; span?: number }) {
   return (
-    <div className="glass-card p-4 flex flex-col" style={{ gridColumn: span > 1 ? `span ${span}` : undefined }}>
-      <div className="text-xs font-bold tracking-widest uppercase mb-4 neon-cyan">{title}</div>
-      <div className="flex-1">{children}</div>
+    <div className="flex flex-col border border-white/5 bg-[#0a0f16]/60 rounded-2xl p-6 shadow-lg backdrop-blur-md" style={{ gridColumn: span > 1 ? `span ${span}` : undefined }}>
+      <div className="text-[11px] font-bold tracking-widest uppercase mb-6 text-gray-400">{title}</div>
+      <div className="flex-1 w-full relative">{children}</div>
     </div>
   );
 }
@@ -79,108 +82,118 @@ export default function AnalyticsPage() {
   const safeRoutes = routes.filter((r) => r.status !== "blocked").length;
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#050505] text-gray-200">
       <Navbar />
-      <div className="flex-1 overflow-y-auto side-panel p-4">
+      
+      <div className="flex-1 overflow-y-auto side-panel px-8 py-8 space-y-6">
+        
         {/* KPI summary row */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-6">
           {[
-            { label: "City Risk Index", value: `${avgRisk}%`, color: avgRisk > 60 ? "#ff3b3b" : "#ffd700", icon: "📊" },
-            { label: "Active Incidents", value: activeDisasters.length, color: "#ff3b3b", icon: "🚨" },
-            { label: "Units Deployed", value: `${deployed}/${units.length}`, color: "#00d2ff", icon: "🚑" },
-            { label: "Safe Routes", value: `${safeRoutes}/${routes.length}`, color: "#00ff88", icon: "🛣" },
-          ].map(({ label, value, color, icon }) => (
-            <div key={label} className="glass-card p-4 text-center">
-              <div className="text-2xl mb-1">{icon}</div>
-              <div className="text-2xl font-black mb-1" style={{ color }}>{value}</div>
-              <div className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</div>
+            { label: "City Risk Index", value: `${avgRisk}%`, color: avgRisk > 60 ? "#ef4444" : "#eab308", icon: Activity },
+            { label: "Active Incidents", value: activeDisasters.length, color: "#ef4444", icon: ShieldAlert },
+            { label: "Units Deployed", value: `${deployed}/${units.length}`, color: "#0ea5e9", icon: Ambulance },
+            { label: "Safe Routes", value: `${safeRoutes}/${routes.length}`, color: "#22c55e", icon: Route },
+          ].map(({ label, value, color, icon: Icon }) => (
+            <div key={label} className="border border-white/5 bg-[#0a0f16]/60 rounded-2xl p-6 flex items-center gap-5 shadow-lg backdrop-blur-md transition-all hover:bg-[#0c131c]">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/5">
+                <Icon className="w-5 h-5" style={{ color }} strokeWidth={2} />
+              </div>
+              <div className="flex flex-col">
+                <div className="text-3xl font-bold tracking-tight" style={{ color }}>{value}</div>
+                <div className="text-[11px] font-semibold tracking-widest uppercase text-gray-500 mt-1">{label}</div>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Charts grid */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-2 gap-6">
           {/* Risk over time */}
           <ChartCard title="Risk Index Over Time (12h)">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={floodSeries} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={floodSeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                 <defs>
                   <linearGradient id="gFlood" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#00d2ff" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#00d2ff" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#0ea5e9" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gFire" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#ff6b35" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#ff6b35" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="time" tick={{ fill: "#4a7a9b", fontSize: 9 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "#4a7a9b", fontSize: 9 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} dy={10} />
+                <YAxis domain={[0, 100]} tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="flood"   name="Flood"   stroke="#00d2ff" fill="url(#gFlood)" strokeWidth={2} />
-                <Area type="monotone" dataKey="fire"    name="Fire"    stroke="#ff6b35" fill="url(#gFire)"  strokeWidth={2} />
-                <Area type="monotone" dataKey="seismic" name="Seismic" stroke="#ffd700" fill="none"         strokeWidth={1.5} strokeDasharray="4 3" />
+                <Area type="monotone" dataKey="flood"   name="Flood"   stroke="#0ea5e9" fill="url(#gFlood)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="fire"    name="Fire"    stroke="#ef4444" fill="url(#gFire)"  strokeWidth={2.5} />
+                <Area type="monotone" dataKey="seismic" name="Seismic" stroke="#eab308" fill="none"         strokeWidth={1.5} strokeDasharray="4 4" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
 
           {/* Evacuation progress */}
           <ChartCard title="Evacuation Progress (12h)">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={evacuationSeries} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="time" tick={{ fill: "#4a7a9b", fontSize: 9 }} />
-                <YAxis tick={{ fill: "#4a7a9b", fontSize: 9 }} />
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={evacuationSeries} margin={{ top: 10, right: 10, bottom: 0, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} dy={10} />
+                <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="moved"    name="Evacuees Moved"    stroke="#00ff88" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="rerouted" name="Vehicles Rerouted" stroke="#00d2ff" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+                <Line type="monotone" dataKey="moved"    name="Evacuees Moved"    stroke="#22c55e" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="rerouted" name="Vehicles Rerouted" stroke="#0ea5e9" strokeWidth={2} dot={false} strokeDasharray="5 5" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-3">
+        <div className="grid grid-cols-3 gap-6">
           {/* Resource deployment */}
           <ChartCard title="Resource Deployment">
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={resourceSeries} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={resourceSeries} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: -10 }} barSize={16}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                <XAxis type="number" tick={{ fill: "#4a7a9b", fontSize: 9 }} domain={[0, "dataMax"]} />
-                <YAxis type="category" dataKey="name" tick={{ fill: "#8bb8d4", fontSize: 9 }} width={72} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="deployed"  name="Deployed"  fill="#00d2ff" stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="available" name="Available" fill="#00ff8844" stackId="a" radius={[0, 3, 3, 0]} />
+                <XAxis type="number" tick={{ fill: "#6b7280", fontSize: 10 }} domain={[0, "dataMax"]} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "#9ca3af", fontSize: 10, fontWeight: 500 }} width={80} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.02)" }} />
+                <Bar dataKey="deployed"  name="Deployed"  fill="#0ea5e9" stackId="a" radius={[2, 0, 0, 2]} />
+                <Bar dataKey="available" name="Available" fill="rgba(14, 165, 233, 0.2)" stackId="a" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
 
           {/* Risk radar */}
           <ChartCard title="City Risk Profile">
-            <ResponsiveContainer width="100%" height={180}>
-              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                <PolarGrid stroke="rgba(0,210,255,0.15)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: "#4a7a9b", fontSize: 8 }} />
-                <Radar name="Risk" dataKey="value" stroke="#00d2ff" fill="#00d2ff" fillOpacity={0.2} strokeWidth={1.5} />
+            <ResponsiveContainer width="100%" height={200}>
+              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
+                <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                <PolarAngleAxis dataKey="metric" tick={{ fill: "#9ca3af", fontSize: 9 }} />
+                <Radar name="Risk" dataKey="value" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.15} strokeWidth={2} />
               </RadarChart>
             </ResponsiveContainer>
           </ChartCard>
 
           {/* Supply utilization */}
           <ChartCard title="Supply Utilization">
-            <div className="space-y-3">
+            <div className="flex flex-col justify-center h-full space-y-4 px-2">
               {supplies.map((s) => {
                 const pct = Math.round((s.deployed / s.total) * 100);
                 return (
-                  <div key={s.category}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span style={{ color: "var(--text-secondary)" }}>{s.icon} {s.category}</span>
-                      <span style={{ color: s.color }} className="font-bold">{pct}%</span>
+                  <div key={s.category} className="group">
+                    <div className="flex justify-between items-center text-xs mb-2">
+                      <div className="flex items-center gap-2 text-gray-400 font-medium">
+                        <Package className="w-3.5 h-3.5 opacity-60" />
+                        {s.category}
+                      </div>
+                      <span style={{ color: s.color }} className="font-bold opacity-90">{pct}%</span>
                     </div>
-                    <div className="progress-bar" style={{ height: 5 }}>
-                      <div className="progress-fill" style={{
+                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{
                         width: `${pct}%`,
-                        background: `linear-gradient(to right, ${s.color}55, ${s.color})`,
+                        background: s.color,
+                        boxShadow: `0 0 10px ${s.color}66`,
                       }} />
                     </div>
                   </div>
@@ -191,34 +204,44 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Zone risk table */}
-        <div className="glass-card p-4">
-          <div className="text-xs font-bold tracking-widest uppercase mb-3 neon-cyan">Zone Risk Breakdown</div>
+        <div className="border border-white/5 bg-[#0a0f16]/60 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+          <div className="text-[11px] font-bold tracking-widest uppercase mb-6 text-gray-400">Zone Risk Breakdown</div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm text-left border-collapse">
               <thead>
-                <tr className="border-b" style={{ borderColor: "rgba(0,210,255,0.1)" }}>
-                  {["Zone", "Flood %", "Fire %", "Seismic %", "Overall %", "Population", "Elderly %", "Road"].map((h) => (
-                    <th key={h} className="text-left pb-2 pr-4 font-semibold" style={{ color: "var(--text-muted)" }}>{h}</th>
-                  ))}
+                <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px] tracking-wider">
+                  <th className="pb-3 px-4 font-semibold">Zone</th>
+                  <th className="pb-3 px-4 font-semibold">Flood %</th>
+                  <th className="pb-3 px-4 font-semibold">Fire %</th>
+                  <th className="pb-3 px-4 font-semibold">Seismic %</th>
+                  <th className="pb-3 px-4 font-semibold">Overall Risk</th>
+                  <th className="pb-3 px-4 font-semibold">Population</th>
+                  <th className="pb-3 px-4 font-semibold">Elderly %</th>
+                  <th className="pb-3 px-4 font-semibold text-right">Road Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/5">
                 {riskCells.map((c) => {
-                  const oc = c.overallRisk >= 70 ? "#ff3b3b" : c.overallRisk >= 40 ? "#ff9500" : "#00ff88";
+                  const oc = c.overallRisk >= 70 ? "text-red-400 bg-red-400/10 border-red-400/20" : c.overallRisk >= 40 ? "text-orange-400 bg-orange-400/10 border-orange-400/20" : "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
                   return (
-                    <tr key={c.id} className="border-b" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
-                      <td className="py-2 pr-4 font-medium" style={{ color: "var(--text-primary)" }}>{c.zone}</td>
-                      <td className="py-2 pr-4" style={{ color: c.floodRisk >= 70 ? "#ff3b3b" : "#8bb8d4" }}>{c.floodRisk}</td>
-                      <td className="py-2 pr-4" style={{ color: c.fireRisk  >= 70 ? "#ff6b35" : "#8bb8d4" }}>{c.fireRisk}</td>
-                      <td className="py-2 pr-4" style={{ color: "var(--text-muted)" }}>{c.seismicRisk}</td>
-                      <td className="py-2 pr-4 font-bold" style={{ color: oc }}>{c.overallRisk}</td>
-                      <td className="py-2 pr-4" style={{ color: "var(--text-secondary)" }}>{c.population.toLocaleString()}</td>
-                      <td className="py-2 pr-4" style={{ color: c.elderlyDensity > 0.25 ? "#ff9500" : "var(--text-muted)" }}>
+                    <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3 px-4 font-medium text-gray-200">{c.zone}</td>
+                      <td className={`py-3 px-4 ${c.floodRisk >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.floodRisk}</td>
+                      <td className={`py-3 px-4 ${c.fireRisk  >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}</td>
+                      <td className="py-3 px-4 text-gray-500">{c.seismicRisk}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${oc}`}>
+                          {c.overallRisk}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-gray-400">{c.population.toLocaleString()}</td>
+                      <td className={`py-3 px-4 ${c.elderlyDensity > 0.25 ? "text-orange-400" : "text-gray-500"}`}>
                         {Math.round(c.elderlyDensity * 100)}%
                       </td>
-                      <td className="py-2 pr-4">
-                        <span style={{ color: c.roadBlocked ? "#ff3b3b" : "#00ff88" }}>
-                          {c.roadBlocked ? "⛔ Blocked" : "✅ Open"}
+                      <td className="py-3 px-4 text-right">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${c.roadBlocked ? "text-red-400" : "text-emerald-400"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${c.roadBlocked ? "bg-red-400" : "bg-emerald-400"}`} />
+                          {c.roadBlocked ? "Blocked" : "Clear"}
                         </span>
                       </td>
                     </tr>
@@ -228,6 +251,7 @@ export default function AnalyticsPage() {
             </table>
           </div>
         </div>
+        
       </div>
     </div>
   );

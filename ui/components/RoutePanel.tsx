@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Navigation, Route, TrafficCone, MapPin, Activity, CheckCircle2, AlertTriangle, AlertOctagon } from "lucide-react";
 import { useRouting } from "@/hooks/useRouting";
 import { useRouteStore } from "@/store/routeStore";
 
@@ -11,54 +12,42 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function RoutePanel() {
   const {
-    routes, activeRoute, activeRouteId, isComputing,
+    routes, activeRouteId, isComputing,
     selectRoute, getRiskColor, getStatusColor, safeRoutes, blockedRoutes,
     runSignalOptimization, lastOptimized,
   } = useRouting();
-  const { signals, reroutedVehicles, evacueesMoved } = useRouteStore();
+  const { signals, reroutedVehicles } = useRouteStore();
   const [tab, setTab] = useState<"routes" | "signals">("routes");
 
   return (
-    <div className="flex flex-col h-full" style={{ color: "var(--text-primary)" }}>
+    <div className="flex flex-col h-full bg-transparent text-gray-200">
       {/* Header */}
-      <div className="px-4 py-3 border-b shrink-0" style={{ borderColor: "rgba(0,210,255,0.12)" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-bold tracking-wide neon-cyan">⚡ ROUTE COMMAND</span>
+      <div className="px-4 py-3 border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <Navigation size={14} className="text-gray-400" />
+          <span className="text-xs font-semibold tracking-wide text-gray-200">ROUTE COMMAND</span>
           {isComputing && (
-            <span className="badge status-info animate-pulse-glow text-xs">COMPUTING…</span>
+            <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-blue-500/10 text-blue-400 animate-pulse">
+              Computing
+            </span>
           )}
         </div>
-        <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-          <span><span className="neon-green font-bold">{safeRoutes.length}</span> safe</span>
-          <span><span className="neon-red font-bold">{blockedRoutes.length}</span> blocked</span>
-          <span><span className="neon-cyan font-bold">{reroutedVehicles.toLocaleString()}</span> rerouted</span>
+        <div className="flex gap-4 text-[10px] text-gray-500 font-medium">
+          <span className="flex items-center gap-1"><CheckCircle2 size={10} className="text-emerald-400" /> {safeRoutes.length} safe</span>
+          <span className="flex items-center gap-1"><AlertOctagon size={10} className="text-red-400" /> {blockedRoutes.length} blocked</span>
+          <span className="flex items-center gap-1"><Route size={10} className="text-blue-400" /> {reroutedVehicles.toLocaleString()} rerouted</span>
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-2 px-3 py-2 shrink-0">
-        {[
-          { label: "Evacuees Moved", value: evacueesMoved.toLocaleString(), color: "#00ff88" },
-          { label: "Vehicles Rerouted", value: reroutedVehicles.toLocaleString(), color: "#00d2ff" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="glass-card px-3 py-2 text-center">
-            <div className="text-sm font-bold" style={{ color }}>{value}</div>
-            <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</div>
-          </div>
-        ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex px-3 gap-2 mb-2 shrink-0">
+      <div className="flex px-3 gap-1 py-3 shrink-0">
         {(["routes", "signals"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className="flex-1 py-1.5 rounded text-xs font-semibold tracking-widest uppercase transition-all"
-            style={{
-              background: tab === t ? "rgba(0,210,255,0.15)" : "transparent",
-              color: tab === t ? "var(--neon-cyan)" : "var(--text-muted)",
-              border: `1px solid ${tab === t ? "rgba(0,210,255,0.3)" : "rgba(255,255,255,0.06)"}`,
-            }}>
-            {t === "routes" ? "🛣 Routes" : "🚦 Signals"}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-semibold tracking-wider uppercase transition-colors ${
+              tab === t ? "bg-white/10 text-white" : "bg-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            }`}>
+            {t === "routes" ? <Route size={12} /> : <TrafficCone size={12} />}
+            {t}
           </button>
         ))}
       </div>
@@ -72,112 +61,90 @@ export default function RoutePanel() {
               const statusColor = getStatusColor(route.status);
               const riskColor = getRiskColor(route.riskScore);
               return (
-                <motion.div key={route.id}
-                  whileHover={{ scale: 1.01 }}
-                  onClick={() => selectRoute(route.id)}
-                  className="glass-card p-3 cursor-pointer transition-all"
-                  style={{
-                    border: `1px solid ${isActive ? "rgba(0,210,255,0.5)" : "rgba(0,210,255,0.1)"}`,
-                    background: isActive ? "rgba(0,210,255,0.08)" : undefined,
-                  }}>
-                  {/* Route name + status */}
+                <div key={route.id} onClick={() => selectRoute(route.id)}
+                  className={`p-3 cursor-pointer rounded-lg border transition-colors ${
+                    isActive ? "bg-white/10 border-white/20" : "bg-[#111318]/40 border-transparent hover:bg-white/5"
+                  }`}>
+                  
+                  {/* Header */}
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold" style={{ color: isActive ? "var(--neon-cyan)" : "var(--text-primary)" }}>
+                    <span className={`text-[11px] font-medium ${isActive ? "text-white" : "text-gray-300"}`}>
                       {route.name}
                     </span>
-                    <span className="badge text-xs font-bold px-2 py-0.5 rounded"
-                      style={{ color: statusColor, background: `${statusColor}1a`, border: `1px solid ${statusColor}44` }}>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-white/5" style={{ color: statusColor }}>
                       {STATUS_LABEL[route.status]}
                     </span>
                   </div>
 
-                  {/* Zone info */}
-                  <div className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
+                  {/* Route points */}
+                  <div className="flex items-center gap-1.5 text-[10px] mb-3 text-gray-500">
+                    <MapPin size={10} />
                     <span>{route.fromZone}</span>
-                    <span className="mx-1" style={{ color: "var(--text-muted)" }}>→</span>
-                    <span style={{ color: "var(--neon-cyan)" }}>{route.toShelter}</span>
+                    <span>→</span>
+                    <span className="text-gray-300">{route.toShelter}</span>
                   </div>
 
                   {/* Metrics */}
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {[
-                      { label: "Distance", value: `${route.distance} km` },
-                      { label: "ETA", value: `${route.estimatedTime} min` },
-                      { label: "Capacity", value: `${route.capacity}/h` },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="text-center">
-                        <div className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{value}</div>
-                        <div className="text-xs" style={{ color: "var(--text-muted)", fontSize: 10 }}>{label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Risk bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span style={{ color: "var(--text-muted)" }}>Risk Score</span>
-                      <span style={{ color: riskColor }} className="font-bold">{route.riskScore}/100</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[10px]">
+                    <div className="flex gap-1.5">
+                      <span className="text-gray-500">Dist:</span>
+                      <span className="text-gray-300 font-medium">{route.distance} km</span>
                     </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill"
-                        style={{ width: `${route.riskScore}%`, background: `linear-gradient(to right, ${riskColor}88, ${riskColor})` }} />
+                    <div className="flex gap-1.5">
+                      <span className="text-gray-500">ETA:</span>
+                      <span className="text-gray-300 font-medium">{route.estimatedTime}m</span>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <span className="text-gray-500">Risk:</span>
+                      <span className="font-medium" style={{ color: riskColor }}>{route.riskScore}</span>
                     </div>
                   </div>
 
                   {/* Blocked segments */}
                   {route.blockedSegments > 0 && (
-                    <div className="mt-2 text-xs flex items-center gap-1" style={{ color: "#ff9500" }}>
-                      <span>⚠</span>
-                      <span>{route.blockedSegments} blocked segment{route.blockedSegments > 1 ? "s" : ""}</span>
+                    <div className="mt-2 text-[9px] flex items-center gap-1.5 text-orange-400 font-medium uppercase tracking-wider">
+                      <AlertTriangle size={10} />
+                      {route.blockedSegments} blocked segment{route.blockedSegments > 1 ? "s" : ""}
                     </div>
                   )}
 
                   {isActive && (
-                    <div className="mt-2 text-xs flex items-center gap-1 neon-cyan">
-                      <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse-glow" />
-                      <span>SELECTED — A* Active</span>
+                    <div className="mt-2 text-[9px] flex items-center gap-1.5 text-blue-400 font-medium uppercase tracking-wider">
+                      <Activity size={10} className="animate-pulse" /> A* Selected
                     </div>
                   )}
-                </motion.div>
+                </div>
               );
             })}
           </>
         ) : (
           <>
-            <button
-              onClick={runSignalOptimization}
-              disabled={isComputing}
-              className="w-full py-2 rounded text-xs font-bold tracking-widest uppercase mb-2 transition-all"
-              style={{
-                background: isComputing ? "rgba(0,210,255,0.08)" : "rgba(0,210,255,0.18)",
-                color: isComputing ? "var(--text-muted)" : "var(--neon-cyan)",
-                border: "1px solid rgba(0,210,255,0.35)",
-              }}>
-              {isComputing ? "⏳ Optimizing…" : "🚦 Run Signal Optimization"}
-            </button>
+            <motion.button whileTap={{ scale: 0.98 }} onClick={runSignalOptimization} disabled={isComputing}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-md text-[11px] font-bold tracking-widest uppercase mb-3 transition-colors ${
+                isComputing ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5" : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+              }`}>
+              <TrafficCone size={14} />
+              {isComputing ? "Optimizing..." : "Optimize Signals"}
+            </motion.button>
+            
             {lastOptimized && (
-              <div className="text-xs text-center mb-2" style={{ color: "var(--text-muted)" }}>
+              <div className="text-[9px] text-center mb-3 text-gray-500 uppercase tracking-widest font-medium">
                 Last run: {lastOptimized.toLocaleTimeString()}
               </div>
             )}
+            
             {signals.map((sig) => {
-              const modeColor = {
-                evacuation: "#00ff88", emergency: "#00d2ff",
-                blocked: "#ff3b3b", normal: "#ffd700",
-              }[sig.mode] ?? "#4a7a9b";
+              const modeColor = { evacuation: "#34d399", emergency: "#60a5fa", blocked: "#f87171", normal: "#fbbf24" }[sig.mode] ?? "#94a3b8";
               return (
-                <div key={sig.id} className="glass-card p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>
-                      {sig.intersection}
-                    </span>
-                    <span className="badge text-xs px-2 py-0.5 rounded font-bold"
-                      style={{ color: modeColor, background: `${modeColor}1a`, border: `1px solid ${modeColor}44` }}>
-                      {sig.mode.toUpperCase()}
+                <div key={sig.id} className="bg-[#111318]/40 border border-transparent p-2.5 rounded-lg flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-gray-300">{sig.intersection}</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-white/5" style={{ color: modeColor }}>
+                      {sig.mode}
                     </span>
                   </div>
-                  <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    Green duration: <span style={{ color: modeColor }} className="font-semibold">{sig.greenDuration}s</span>
+                  <div className="text-[10px] text-gray-500">
+                    Green duration: <span style={{ color: modeColor }} className="font-medium ml-1">{sig.greenDuration}s</span>
                   </div>
                 </div>
               );

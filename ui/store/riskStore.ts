@@ -51,7 +51,7 @@ const MOCK_RISK_CELLS: RiskCell[] = [
   { id: "z6", zone: "Zone F – Industrial Sector", floodRisk: 68, fireRisk: 62, seismicRisk: 25, overallRisk: 70, population: 12300, elderlyDensity: 0.08, roadBlocked: false },
 ];
 
-export const useRiskStore = create<RiskStore>((set, get) => ({
+export const useRiskStore = create<RiskStore>((set) => ({
   activeDisasters: [],
   riskCells: MOCK_RISK_CELLS,
   systemStatus: "monitoring",

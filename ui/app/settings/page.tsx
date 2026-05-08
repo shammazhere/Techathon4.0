@@ -2,11 +2,22 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import {
+  Settings,
+  Cpu,
+  Map as MapIcon,
+  Bell,
+  Save,
+  RotateCcw,
+  Globe,
+  Zap
+} from "lucide-react";
 
 const SECTIONS = [
   {
     title: "System Configuration",
-    icon: "⚙",
+    icon: Settings,
+    color: "text-blue-400",
     fields: [
       { label: "Simulation Speed", type: "select", options: ["0.5x", "1x", "2x", "5x"], default: "1x" },
       { label: "Auto-Respond Mode", type: "toggle", default: true },
@@ -16,48 +27,38 @@ const SECTIONS = [
   },
   {
     title: "AI Agent Settings",
-    icon: "🤖",
+    icon: Cpu,
+    color: "text-purple-400",
     fields: [
       { label: "Disaster Agent", type: "toggle", default: true },
-      { label: "Route Agent",    type: "toggle", default: true },
+      { label: "Route Agent", type: "toggle", default: true },
       { label: "Resource Agent", type: "toggle", default: true },
-      { label: "Rescue Agent",   type: "toggle", default: true },
-      { label: "Traffic Agent",  type: "toggle", default: true },
-      { label: "Explanation Agent", type: "toggle", default: true },
+      { label: "Rescue Agent", type: "toggle", default: true },
+      { label: "Traffic Agent", type: "toggle", default: true },
       { label: "LLM Model", type: "select", options: ["DeepSeek-V3", "Llama 3 70B", "Mixtral 8x7B"], default: "Llama 3 70B" },
     ],
   },
   {
     title: "Map & Visualization",
-    icon: "🗺",
+    icon: MapIcon,
+    color: "text-emerald-400",
     fields: [
-      { label: "Show Risk Heatmap",   type: "toggle", default: true },
+      { label: "Show Risk Heatmap", type: "toggle", default: true },
       { label: "Show Evacuation Routes", type: "toggle", default: true },
-      { label: "Show Shelter Markers",   type: "toggle", default: true },
-      { label: "Show Grid Lines",        type: "toggle", default: true },
-      { label: "Animate Disaster Spread",type: "toggle", default: true },
+      { label: "Show Shelter Markers", type: "toggle", default: true },
+      { label: "Show Grid Lines", type: "toggle", default: true },
       { label: "Map Style", type: "select", options: ["Dark Tactical", "Satellite", "Terrain", "Street"], default: "Dark Tactical" },
     ],
   },
   {
     title: "Alert Thresholds",
-    icon: "🚨",
+    icon: Bell,
+    color: "text-amber-400",
     fields: [
       { label: "Flood Risk Alert (%)", type: "number", default: "65" },
-      { label: "Fire Risk Alert (%)",  type: "number", default: "70" },
+      { label: "Fire Risk Alert (%)", type: "number", default: "70" },
       { label: "Shelter Capacity Alert (%)", type: "number", default: "85" },
-      { label: "Fuel Low Alert (%)",   type: "number", default: "25" },
-    ],
-  },
-  {
-    title: "API & Data Sources",
-    icon: "🔌",
-    fields: [
-      { label: "Backend URL",       type: "text",   default: "http://localhost:8000" },
-      { label: "WebSocket URL",     type: "text",   default: "ws://localhost:8000/ws" },
-      { label: "Groq API Key",      type: "password", default: "sk-••••••••••••••••" },
-      { label: "Mapbox Token",      type: "password", default: "pk.••••••••••••••••" },
-      { label: "OpenWeather Key",   type: "password", default: "ow-••••••••••••••••" },
+      { label: "Fuel Low Alert (%)", type: "number", default: "25" },
     ],
   },
 ];
@@ -66,97 +67,92 @@ function ToggleSwitch({ defaultOn }: { defaultOn: boolean }) {
   const [on, setOn] = useState(defaultOn);
   return (
     <button onClick={() => setOn(!on)}
-      className="relative inline-flex items-center w-10 h-5 rounded-full transition-all duration-300"
-      style={{ background: on ? "rgba(0,210,255,0.8)" : "rgba(255,255,255,0.1)" }}>
-      <span className="absolute w-4 h-4 rounded-full transition-transform duration-300 shadow"
-        style={{ background: on ? "#fff" : "#4a7a9b", transform: on ? "translateX(22px)" : "translateX(2px)" }} />
+      className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors duration-200 outline-none focus:ring-2 focus:ring-blue-500/20 ${on ? "bg-blue-600" : "bg-white/10"}`}>
+      <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ${on ? "translate-x-6" : "translate-x-1"}`} />
     </button>
   );
 }
 
 export default function SettingsPage() {
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#050505] text-gray-200">
       <Navbar />
-      <div className="flex-1 overflow-y-auto side-panel p-6">
-        <div className="max-w-3xl mx-auto space-y-4">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-xl font-black tracking-widest mb-1 text-shimmer">SYSTEM SETTINGS</h1>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Configure Civic Autopilot's AI agents, data sources, and visualization parameters.
-            </p>
-          </div>
 
-          {SECTIONS.map((section) => (
-            <div key={section.title} className="glass-card p-5">
-              <div className="flex items-center gap-2 mb-4 pb-3 border-b"
-                style={{ borderColor: "rgba(0,210,255,0.1)" }}>
-                <span className="text-lg">{section.icon}</span>
-                <span className="text-sm font-bold tracking-widest uppercase neon-cyan">{section.title}</span>
-              </div>
-              <div className="space-y-4">
-                {section.fields.map((field) => (
-                  <div key={field.label} className="flex items-center justify-between gap-6">
-                    <label className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-                      {field.label}
-                    </label>
-                    {field.type === "toggle" ? (
-                      <ToggleSwitch defaultOn={field.default as boolean} />
-                    ) : field.type === "select" ? (
-                      <select defaultValue={field.default as string}
-                        className="px-3 py-1.5 rounded text-xs font-medium outline-none transition-all"
-                        style={{
-                          background: "rgba(0,210,255,0.08)",
-                          border: "1px solid rgba(0,210,255,0.2)",
-                          color: "var(--neon-cyan)",
-                        }}>
-                        {(field.options ?? []).map((o) => (
-                          <option key={o} value={o} style={{ background: "#020c1b" }}>{o}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type={field.type}
-                        defaultValue={field.default as string}
-                        className="px-3 py-1.5 rounded text-xs font-mono outline-none w-52 transition-all"
-                        style={{
-                          background: "rgba(0,0,0,0.4)",
-                          border: "1px solid rgba(0,210,255,0.2)",
-                          color: "var(--text-primary)",
-                        }}
-                        onFocus={(e) => e.target.style.borderColor = "rgba(0,210,255,0.6)"}
-                        onBlur={(e) => e.target.style.borderColor = "rgba(0,210,255,0.2)"}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+      <main className="flex-1 overflow-y-auto side-panel">
+        <div className="max-w-6xl mx-auto px-8 py-10 space-y-10">
+
+          {/* Header & Actions */}
+          <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
+            <div className="space-y-1">
+              <h1 className="text-4xl font-bold tracking-tight text-white">System Settings</h1>
+              <p className="text-gray-400">Configure your autonomous disaster response engine parameters.</p>
             </div>
-          ))}
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-white/5 border border-white/10 text-gray-400 hover:text-gray-200 transition-all active:scale-95">
+                <RotateCcw className="w-4 h-4" />
+                Reset Defaults
+              </button>
+              <button className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-500 shadow-lg transition-all active:scale-95">
+                <Save className="w-4 h-4" />
+                Save Configuration
+              </button>
+            </div>
+          </header>
 
-          {/* Save button */}
-          <div className="flex gap-3 pb-6">
-            <button className="flex-1 py-3 rounded font-bold text-sm tracking-widest uppercase transition-all"
-              style={{
-                background: "rgba(0,210,255,0.18)",
-                color: "var(--neon-cyan)",
-                border: "1px solid rgba(0,210,255,0.4)",
-                boxShadow: "0 0 20px rgba(0,210,255,0.15)",
-              }}>
-              💾 Save Configuration
-            </button>
-            <button className="px-6 py-3 rounded font-bold text-sm tracking-widest uppercase transition-all"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                color: "var(--text-muted)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}>
-              Reset Defaults
-            </button>
+          {/* Settings Sections Container */}
+          <div className="flex flex-wrap gap-8">
+            {SECTIONS.map((section) => {
+              const Icon = section.icon;
+              return (
+                <section key={section.title} className="flex-1 min-w-[400px] flex flex-col border border-white/5 bg-[#0a0f16]/60 rounded-2xl p-6 shadow-xl backdrop-blur-md transition-all hover:bg-[#0c131c]">
+                  <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/5 ${section.color}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-sm font-bold tracking-widest uppercase text-gray-200">{section.title}</h2>
+                  </div>
+
+                  <div className="flex flex-col gap-5">
+                    {section.fields.map((field) => (
+                      <div key={field.label} className="flex items-center justify-between gap-6 group">
+                        <label className="text-sm font-medium text-gray-400 group-hover:text-gray-200 transition-colors">
+                          {field.label}
+                        </label>
+                        <div className="flex-shrink-0">
+                          {field.type === "toggle" ? (
+                            <ToggleSwitch defaultOn={field.default as boolean} />
+                          ) : field.type === "select" ? (
+                            <select defaultValue={field.default as string}
+                              className="bg-[#050505] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-200 outline-none focus:border-blue-500/50 transition-all cursor-pointer">
+                              {(field.options ?? []).map((o) => (
+                                <option key={o} value={o}>{o}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={field.type}
+                              defaultValue={field.default as string}
+                              className="bg-[#050505] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-gray-200 outline-none w-48 focus:border-blue-500/50 transition-all"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
+
+          {/* Footer Branding */}
+          <footer className="pt-10 flex justify-between items-center opacity-30 grayscale transition-all duration-700">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-blue-400" />
+              <span className="text-[10px] font-black tracking-widest uppercase">Civic Autopilot v4.2.0</span>
+            </div>
+          </footer>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
