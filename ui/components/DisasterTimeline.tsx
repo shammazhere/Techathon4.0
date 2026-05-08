@@ -6,9 +6,7 @@ import { useRiskStore, type DisasterType, type SeverityLevel } from "@/store/ris
 import { Waves, Flame, Activity, AlertTriangle, ShieldAlert, Target, History, X } from "lucide-react";
 
 const TYPE_META: Record<DisasterType, { icon: React.ReactNode; label: string; color: string }> = {
-  flood: { icon: <Waves size={16} />, label: "Flood", color: "text-blue-400" },
   wildfire: { icon: <Flame size={16} />, label: "Wildfire", color: "text-orange-400" },
-  earthquake: { icon: <Activity size={16} />, label: "Earthquake", color: "text-amber-400" },
   none: { icon: <AlertTriangle size={16} />, label: "Unknown", color: "text-gray-400" },
 };
 
@@ -24,16 +22,16 @@ const SEV_BG: Record<SeverityLevel, string> = {
 };
 
 const SEVERITY_OPTS: SeverityLevel[] = ["critical", "high", "medium", "low"];
-const TYPE_OPTS: DisasterType[] = ["flood", "wildfire", "earthquake"];
+const TYPE_OPTS: DisasterType[] = ["wildfire"];
 
 // Predefined trigger locations (lat/lng not shown on mock map, just labels)
 const TRIGGER_ZONES = [
-  { label: "Zone A – North District", lat: 12.99, lng: 77.62 },
-  { label: "Zone B – East Harbor", lat: 12.98, lng: 77.59 },
-  { label: "Zone C – South Valley", lat: 12.94, lng: 77.63 },
-  { label: "Zone D – West Hills", lat: 12.98, lng: 77.56 },
-  { label: "Zone E – Central Core", lat: 12.97, lng: 77.59 },
-  { label: "Zone F – Industrial", lat: 12.96, lng: 77.59 },
+  { label: "Northern Himalayas", lat: 30.3165, lng: 78.0322 }, // Uttarakhand
+  { label: "Eastern Forests", lat: 21.9320, lng: 86.4428 },    // Simlipal, Odisha
+  { label: "Western Ghats", lat: 11.7588, lng: 76.2415 },      // Wayanad/Bandipur
+  { label: "Central India", lat: 22.3340, lng: 78.0322 },      // Madhya Pradesh
+  { label: "Deccan Plateau", lat: 15.3173, lng: 75.7139 },     // Karnataka/Maharashtra
+  { label: "Northeast Region", lat: 26.5775, lng: 93.1711 },   // Kaziranga, Assam
 ];
 
 function formatRelative(d: Date): string {
@@ -45,12 +43,13 @@ function formatRelative(d: Date): string {
 
 export default function DisasterTimeline() {
   const { activeDisasters, disasterHistory, triggerDisaster, removeDisaster, clearAll } = useRiskStore();
-  const [selType, setSelType] = useState<DisasterType>("flood");
+  const [selType, setSelType] = useState<DisasterType>("wildfire");
   const [selSev, setSelSev] = useState<SeverityLevel>("high");
   const [selZone, setSelZone] = useState(0);
   const [triggering, setTriggering] = useState(false);
   const [tab, setTab] = useState<"trigger" | "history">("trigger");
   const [mounted, setMounted] = useState(false);
+  const [alertSent, setAlertSent] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -61,7 +60,7 @@ export default function DisasterTimeline() {
     setTriggering(true);
     await new Promise((r) => setTimeout(r, 900));
     const zone = TRIGGER_ZONES[selZone];
-    triggerDisaster(selType, zone.lat, zone.lng, selSev);
+    triggerDisaster(zone.lat, zone.lng, selSev);
     setTriggering(false);
   }
 
@@ -95,24 +94,49 @@ export default function DisasterTimeline() {
             const sc = SEV_COLOR[d.severity];
             const bgClass = SEV_BG[d.severity];
             return (
-              <div key={d.id} className={`rounded-lg p-3 border flex items-start justify-between gap-3 ${bgClass}`}>
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 ${meta.color}`}>{meta.icon}</div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-semibold ${sc}`}>{meta.label}</span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border bg-black/20 ${sc} ${bgClass.replace('bg-', 'border-')}`}>
-                        {d.severity}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-gray-400">
-                      Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {mounted ? formatRelative(d.startTime) : '---'}
+              <div key={d.id} className={`rounded-lg p-3 border flex flex-col gap-3 ${bgClass}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 ${meta.color}`}>{meta.icon}</div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs font-semibold ${sc}`}>{meta.label}</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border bg-black/20 ${sc} ${bgClass.replace('bg-', 'border-')}`}>
+                          {d.severity}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-400">
+                        Pop. affected: <span className="text-gray-300">{d.affectedPopulation.toLocaleString()}</span> • Started {mounted ? formatRelative(d.startTime) : '---'}
+                      </div>
                     </div>
                   </div>
+                  <button onClick={() => removeDisaster(d.id)}
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <X size={14} />
+                  </button>
                 </div>
-                <button onClick={() => removeDisaster(d.id)}
-                  className="shrink-0 p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                  <X size={14} />
+                
+                {/* Emergency Broadcast System (EBS) Button */}
+                <button 
+                  onClick={() => setAlertSent(prev => ({ ...prev, [d.id]: true }))}
+                  disabled={alertSent[d.id]}
+                  className={`w-full py-2 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${
+                    alertSent[d.id] 
+                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed" 
+                      : "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                  }`}
+                >
+                  {alertSent[d.id] ? (
+                    <>
+                      <Activity size={12} />
+                      EBS Broadcast Sent
+                    </>
+                  ) : (
+                    <>
+                      <ShieldAlert size={12} className="animate-pulse" />
+                      Broadcast Evac Alert ({d.affectedPopulation.toLocaleString()})
+                    </>
+                  )}
                 </button>
               </div>
             );
@@ -125,8 +149,8 @@ export default function DisasterTimeline() {
         {(["trigger", "history"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[11px] font-bold tracking-wider uppercase transition-colors ${tab === t
-                ? "bg-white/10 text-white border border-white/10"
-                : "bg-transparent text-gray-500 border border-transparent hover:text-gray-300 hover:bg-white/5"
+              ? "bg-white/10 text-white border border-white/10"
+              : "bg-transparent text-gray-500 border border-transparent hover:text-gray-300 hover:bg-white/5"
               }`}
           >
             {t === "trigger" ? <Target size={14} /> : <History size={14} />}
@@ -142,24 +166,14 @@ export default function DisasterTimeline() {
             {/* Disaster type */}
             <div>
               <div className="text-[10px] font-semibold mb-2 tracking-wider uppercase text-gray-500">
-                Disaster Type
+                Active Threat
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {TYPE_OPTS.map((t) => {
-                  const m = TYPE_META[t];
-                  const active = selType === t;
-                  return (
-                    <button key={t} onClick={() => setSelType(t)}
-                      className={`flex flex-col items-center gap-2 py-3 rounded-lg border transition-all ${active
-                          ? `bg-blue-500/10 border-blue-500/30 ${m.color}`
-                          : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
-                        }`}
-                    >
-                      {m.icon}
-                      <span className="text-[11px] font-medium">{m.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-3 p-4 rounded-xl border bg-orange-500/10 border-orange-500/20 text-orange-400">
+                <Flame size={20} />
+                <div>
+                  <div className="text-sm font-bold">Wildfire Simulation</div>
+                  <div className="text-[10px] opacity-70">Tactical spread & evacuation mode</div>
+                </div>
               </div>
             </div>
 
@@ -176,8 +190,8 @@ export default function DisasterTimeline() {
                   return (
                     <button key={s} onClick={() => setSelSev(s)}
                       className={`py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider border transition-all ${active
-                          ? `${bgClass} ${c} border-opacity-30`
-                          : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
+                        ? `${bgClass} ${c} border-opacity-30`
+                        : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
                         }`}
                     >
                       {s}
@@ -196,8 +210,8 @@ export default function DisasterTimeline() {
                 {TRIGGER_ZONES.map((z, i) => (
                   <button key={i} onClick={() => setSelZone(i)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${selZone === i
-                        ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
-                        : "bg-white/5 border-transparent text-gray-400 hover:bg-white/10"
+                      ? "bg-orange-500/10 border-orange-500/30 text-orange-400"
+                      : "bg-white/5 border-transparent text-gray-400 hover:bg-white/10"
                       }`}
                   >
                     {z.label}
@@ -212,8 +226,8 @@ export default function DisasterTimeline() {
               onClick={handleTrigger}
               disabled={triggering}
               className={`w-full py-3 rounded-lg font-bold text-xs tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${triggering
-                  ? "bg-white/5 text-gray-500 border-white/10 cursor-not-allowed"
-                  : `${SEV_BG[selSev]} ${SEV_COLOR[selSev]} border-opacity-40 hover:bg-opacity-20`
+                ? "bg-white/5 text-gray-500 border-white/10 cursor-not-allowed"
+                : `${SEV_BG[selSev]} ${SEV_COLOR[selSev]} border-opacity-40 hover:bg-opacity-20`
                 }`}
             >
               {triggering ? (

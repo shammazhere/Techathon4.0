@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
-export type DisasterType = "flood" | "wildfire" | "earthquake" | "none";
+export type DisasterType = "wildfire" | "none";
 export type SeverityLevel = "critical" | "high" | "medium" | "low";
 
 export interface DisasterZone {
   id: string;
-  type: DisasterType;
+  type: "wildfire";
   lat: number;
   lng: number;
   radius: number; // km
@@ -18,10 +18,11 @@ export interface DisasterZone {
 export interface RiskCell {
   id: string;
   zone: string;
-  floodRisk: number;     // 0-100
   fireRisk: number;      // 0-100
-  seismicRisk: number;   // 0-100
   overallRisk: number;   // 0-100
+  fuelDensity: number;   // 0-1
+  windSpeed: number;     // km/h
+  evacPriority: number;  // 0-100
   population: number;
   elderlyDensity: number; // 0-1
   roadBlocked: boolean;
@@ -41,7 +42,7 @@ interface RiskStore {
     description: string;
   };
 
-  triggerDisaster: (type: DisasterType, lat: number, lng: number, severity: SeverityLevel) => void;
+  triggerDisaster: (lat: number, lng: number, severity: SeverityLevel) => void;
   removeDisaster: (id: string) => void;
   updateRiskCells: (cells: RiskCell[]) => void;
   updateWeather: (weather: any) => void;
@@ -50,12 +51,12 @@ interface RiskStore {
 }
 
 const MOCK_RISK_CELLS: RiskCell[] = [
-  { id: "z1", zone: "Zone A – North District", floodRisk: 82, fireRisk: 12, seismicRisk: 20, overallRisk: 78, population: 45200, elderlyDensity: 0.28, roadBlocked: true },
-  { id: "z2", zone: "Zone B – East Harbor", floodRisk: 91, fireRisk: 8, seismicRisk: 15, overallRisk: 88, population: 32100, elderlyDensity: 0.22, roadBlocked: true },
-  { id: "z3", zone: "Zone C – South Valley", floodRisk: 35, fireRisk: 74, seismicRisk: 18, overallRisk: 65, population: 28700, elderlyDensity: 0.31, roadBlocked: false },
-  { id: "z4", zone: "Zone D – West Hills", floodRisk: 15, fireRisk: 88, seismicRisk: 12, overallRisk: 72, population: 19400, elderlyDensity: 0.19, roadBlocked: true },
-  { id: "z5", zone: "Zone E – Central Core", floodRisk: 55, fireRisk: 40, seismicRisk: 30, overallRisk: 52, population: 67800, elderlyDensity: 0.15, roadBlocked: false },
-  { id: "z6", zone: "Zone F – Industrial Sector", floodRisk: 68, fireRisk: 62, seismicRisk: 25, overallRisk: 70, population: 12300, elderlyDensity: 0.08, roadBlocked: false },
+  { id: "z1", zone: "Northern Himalayas", fireRisk: 42, overallRisk: 42, fuelDensity: 0.4, windSpeed: 12, evacPriority: 15, population: 45200, elderlyDensity: 0.28, roadBlocked: false },
+  { id: "z2", zone: "Eastern Forests", fireRisk: 28, overallRisk: 28, fuelDensity: 0.3, windSpeed: 15, evacPriority: 10, population: 32100, elderlyDensity: 0.22, roadBlocked: false },
+  { id: "z3", zone: "Western Ghats", fireRisk: 74, overallRisk: 74, fuelDensity: 0.85, windSpeed: 28, evacPriority: 82, population: 28700, elderlyDensity: 0.31, roadBlocked: false },
+  { id: "z4", zone: "Central India", fireRisk: 88, overallRisk: 88, fuelDensity: 0.92, windSpeed: 35, evacPriority: 94, population: 19400, elderlyDensity: 0.19, roadBlocked: true },
+  { id: "z5", zone: "Deccan Plateau", fireRisk: 40, overallRisk: 40, fuelDensity: 0.5, windSpeed: 10, evacPriority: 45, population: 67800, elderlyDensity: 0.15, roadBlocked: false },
+  { id: "z6", zone: "Northeast Region", fireRisk: 62, overallRisk: 62, fuelDensity: 0.7, windSpeed: 22, evacPriority: 68, population: 12300, elderlyDensity: 0.08, roadBlocked: false },
 ];
 
 export const useRiskStore = create<RiskStore>((set) => ({
@@ -72,10 +73,10 @@ export const useRiskStore = create<RiskStore>((set) => ({
     description: "Clear",
   },
 
-  triggerDisaster: (type, lat, lng, severity) => {
+  triggerDisaster: (lat, lng, severity) => {
     const newDisaster: DisasterZone = {
       id: `dis-${Date.now()}`,
-      type,
+      type: "wildfire",
       lat,
       lng,
       radius: severity === "critical" ? 8 : severity === "high" ? 5 : 3,

@@ -13,7 +13,7 @@ export default function MapPage() {
       <div className="flex-1 overflow-hidden flex">
         {/* Full-width map */}
         <div className="flex-1 overflow-hidden">
-          <MapView />
+          <MapView autoCenter={true} />
         </div>
         {/* Side: route panel */}
         <aside className="w-80 shrink-0 border-l overflow-hidden flex flex-col"
