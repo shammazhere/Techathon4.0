@@ -1,5 +1,12 @@
-from database.config import supabase
+import uuid# from database.config import supabase
 
+def start_session(self, disaster_type: str = "flood"):
+    session_id = f"session_{disaster_type}_{uuid.uuid4().hex[:8]}"  # Unique
+try:
+    from database.config import supabase
+except Exception:
+    supabase = None
+    
 class SimulationService:
     def __init__(self):
         self.active_sessions = {}

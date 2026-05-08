@@ -1,6 +1,8 @@
+from database.config import supabase
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from ai_agents.orchestrator.langgraph_flow import orchestrator
+import asyncio
 
 app = FastAPI(
     title="Civic Autopilot Backend",
@@ -25,32 +27,62 @@ def root():
 def health():
     return {"status": "healthy"}
 
+
+# Add this function
+async def broadcast_message(message):
+    disconnected = []
+    for conn in active_connections[:]:  # Copy list
+        try:
+            await conn.send_json(message)
+        except:
+            disconnected.append(conn)
+    for conn in disconnected:
+        active_connections.remove(conn)
+
+# Update your /disaster/start (replace broadcast part)
 @app.post("/disaster/start")
 async def start_disaster():
-    result = orchestrator.start_disaster_session("flood")
+    try:
+        result = orchestrator.start_disaster_session("flood")
+        
+        supabase.table("disaster_sessions").insert({
+            "session_id": result.get("session_id"),
+            "status": result.get("status", "active"),
+            "disaster_type": "flood"
+        }).execute()
+        
+        message = {"type": "disaster_started", "session_id": result.get("session_id")}
+        
+        # NON-BLOCKING broadcast
+        asyncio.create_task(broadcast_message(message))
+        
+        return message
+    except Exception as e:
+        return {"error": str(e)}
 
-    message = {
-        "type": "disaster_started",
-        "message": "Disaster session started successfully",
-        "session_id": result["session_id"],
-        "status": result["status"],
-        "agent": result["agent"],
-        "disaster_type": result["disaster_type"]
-    }
-
-    disconnected = []
-
-    for connection in active_connections:
-        try:
-            await connection.send_json(message)
-        except Exception:
-            disconnected.append(connection)
-
-    for connection in disconnected:
-        if connection in active_connections:
-            active_connections.remove(connection)
-
-    return message
+@app.post("/disaster/start")
+async def start_disaster():
+    try:
+        result = orchestrator.start_disaster_session("flood")
+        
+        supabase.table("disaster_sessions").insert({
+            "session_id": result.get("session_id"),
+            "status": result.get("status", "active"),
+            "disaster_type": "flood"  # No agent
+        }).execute()
+        
+        message = {"type": "disaster_started", "session_id": result.get("session_id")}
+        
+        # Broadcast to WebSocket
+        for conn in active_connections[:]:
+            try:
+                await conn.send_json(message)
+            except:
+                active_connections.remove(conn)
+                
+        return message
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/disaster/status/{session_id}")
 def get_disaster_status(session_id: str):
