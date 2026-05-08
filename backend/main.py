@@ -155,6 +155,8 @@ supabase = MockSupabase()
 # Services
 from services.simulation_service import SimulationService
 
+# from backend.services.simulation_service import simulation_service
+
 app = FastAPI(title="Civic Autopilot Backend", version="1.0.0")
 
 app.add_middleware(
@@ -175,14 +177,23 @@ def root():
 def health():
     return {"status": "healthy", "agents": "ready"}
 
+# @app.get("/api/disaster/start")
+# def start_disaster_simple():
+#     sim = SimulationService()
+#     return {"status": "active", "data": sim.start_flood()}
+
 @app.get("/api/disaster/start")
-def start_disaster_simple():
+def start_disaster(type: str = "flood"):
     sim = SimulationService()
-    return {"status": "active", "data": sim.start_flood()}
+    if type == "flood":
+        return sim.start_flood()
+    elif type == "wildfire":
+        return sim.start_wildfire()
+    return {"error": "Unknown disaster type"}
 
 @app.get("/api/disaster/status")
 def get_status():
-    sim = SimulationService()
+    sim = SimulationService()# return sim.get_disaster_status()
     return sim.get_disaster_status()
 
 @app.get("/api/agents/status")
@@ -245,4 +256,3 @@ async def websocket_disaster(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    
