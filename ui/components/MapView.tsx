@@ -118,7 +118,7 @@ export default function MapView() {
       </MapContainer>
 
       {/* Glassmorphic Tactical Overlay */}
-      <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-4 pointer-events-none">
+      <div className="absolute top-6 left-6 z-1000 flex flex-col gap-4 pointer-events-none">
         <div className="bg-[#080B10]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl w-72">
            <div className="flex items-center gap-3 mb-1">
              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

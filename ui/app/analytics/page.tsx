@@ -175,25 +175,57 @@ export default function AnalyticsPage() {
           </ChartCard>
 
           {/* Supply utilization */}
-          <ChartCard title="Supply Utilization">
-            <div className="flex flex-col justify-center h-full space-y-4 px-2">
+          <ChartCard title="Strategic Supply Reserves">
+            <div className="grid grid-cols-2 gap-3 h-full px-1">
               {supplies.map((s) => {
                 const pct = Math.round((s.deployed / s.total) * 100);
+                const isCritical = pct > 80;
                 return (
-                  <div key={s.category} className="group">
-                    <div className="flex justify-between items-center text-xs mb-2">
-                      <div className="flex items-center gap-2 text-gray-400 font-medium">
-                        <Package className="w-3.5 h-3.5 opacity-60" />
-                        {s.category}
+                  <div 
+                    key={s.category} 
+                    className="relative group overflow-hidden rounded-xl border border-white/5 bg-white/2 p-3 transition-all hover:bg-white/4 hover:border-white/10 flex flex-col justify-between"
+                  >
+                    {/* Dynamic Background Glow */}
+                    <div 
+                      className="absolute -right-6 -bottom-6 w-16 h-16 rounded-full opacity-0 blur-2xl transition-all duration-700 group-hover:opacity-10"
+                      style={{ background: s.color }}
+                    />
+                    
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-xl bg-white/5 border border-white/5 shadow-inner transition-all duration-500 group-hover:bg-white/10 group-hover:border-white/20 group-hover:scale-105"
+                      >
+                        <span className="grayscale group-hover:grayscale-0 transition-all">{s.icon}</span>
                       </div>
-                      <span style={{ color: s.color }} className="font-bold opacity-90">{pct}%</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-200 transition-colors truncate">
+                          {s.category}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1 h-1 rounded-full ${isCritical ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                          <span className="text-[9px] font-mono text-gray-500 uppercase tracking-tighter truncate">
+                            {(s.total - s.deployed).toLocaleString()} Units Left
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{
-                        width: `${pct}%`,
-                        background: s.color,
-                        boxShadow: `0 0 10px ${s.color}66`,
-                      }} />
+
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="flex-1 h-1.5 rounded-full bg-black/40 overflow-hidden border border-white/5 p-[0.5px] relative">
+                        <div 
+                          className="h-full rounded-full transition-all duration-1000 ease-out relative z-10" 
+                          style={{
+                            width: `${pct}%`,
+                            background: `linear-gradient(90deg, ${s.color}aa, ${s.color})`,
+                            boxShadow: `0 0 10px ${s.color}66`,
+                          }} 
+                        />
+                        {/* Scanline overlay effect */}
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] w-20 animate-[shimmer_2s_infinite] opacity-30 z-20" />
+                      </div>
+                      <span className="text-[11px] font-black font-mono tracking-tighter tabular-nums" style={{ color: s.color }}>
+                        {pct}<span className="text-[8px] opacity-60 ml-0.5">%</span>
+                      </span>
                     </div>
                   </div>
                 );

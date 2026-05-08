@@ -52,15 +52,11 @@ const MOCK_RISK_CELLS: RiskCell[] = [
 ];
 
 export const useRiskStore = create<RiskStore>((set) => ({
-  activeDisasters: [
-    { id: "d1", type: "flood", lat: 12.985, lng: 77.605, radius: 4, severity: "high", affectedPopulation: 12500, spreadRate: 0.4, startTime: new Date() },
-    { id: "d2", type: "wildfire", lat: 12.965, lng: 77.545, radius: 3, severity: "critical", affectedPopulation: 8400, spreadRate: 0.7, startTime: new Date() },
-    { id: "d3", type: "earthquake", lat: 12.995, lng: 77.595, radius: 5, severity: "medium", affectedPopulation: 45000, spreadRate: 0.1, startTime: new Date() },
-  ],
+  activeDisasters: [],
   riskCells: MOCK_RISK_CELLS,
-  systemStatus: "active",
-  alertLevel: "orange",
-  totalAffected: 65900,
+  systemStatus: "monitoring",
+  alertLevel: "green",
+  totalAffected: 0,
   disasterHistory: [],
 
   triggerDisaster: (type, lat, lng, severity) => {
