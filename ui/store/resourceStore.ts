@@ -23,6 +23,10 @@ export interface ResourceUnit {
   fuelLevel: number; // 0-100
   lat?: number;
   lng?: number;
+  direction?: "toShelter" | "toFire";
+  routeWaypoints?: [number, number][];
+  returnWaypoints?: [number, number][];
+  waypointIndex?: number;
 }
 
 export interface SupplyItem {
@@ -44,6 +48,8 @@ interface ResourceStore {
   deployUnit: (id: string, zone: string) => void;
   recallUnit: (id: string) => void;
   updateShelter: (id: string, occupied: number) => void;
+  addShelters: (shelters: Shelter[]) => void;
+  autoDeployUnit: (type: ResourceUnit["type"], lat: number, lng: number, waypoints: [number, number][]) => void;
 }
 
 const MOCK_SHELTERS: Shelter[] = [
@@ -55,15 +61,15 @@ const MOCK_SHELTERS: Shelter[] = [
 ];
 
 const MOCK_UNITS: ResourceUnit[] = [
-  { id: "u1", type: "ambulance", label: "AMB-01", status: "deployed", location: "Himalayas", assignedZone: "Northern Himalayas", eta: 4, fuelLevel: 78, lat: 30.3, lng: 78.0 },
-  { id: "u2", type: "ambulance", label: "AMB-02", status: "deployed", location: "Odisha", assignedZone: "Eastern Forests", eta: 7, fuelLevel: 62, lat: 21.9, lng: 86.4 },
-  { id: "u3", type: "ambulance", label: "AMB-03", status: "available", location: "Delhi Base", fuelLevel: 95, lat: 28.6, lng: 77.2 },
-  { id: "u4", type: "firetruck", label: "FT-01", status: "deployed", location: "Central", assignedZone: "Central India", eta: 2, fuelLevel: 88, lat: 22.3, lng: 78.0 },
-  { id: "u5", type: "firetruck", label: "FT-02", status: "deployed", location: "Wayanad", assignedZone: "Western Ghats", eta: 11, fuelLevel: 55, lat: 11.7, lng: 76.2 },
-  { id: "u6", type: "rescue", label: "RSC-01", status: "deployed", location: "Odisha", assignedZone: "Eastern Forests", eta: 3, fuelLevel: 71, lat: 21.8, lng: 86.3 },
-  { id: "u7", type: "rescue", label: "RSC-02", status: "available", location: "Mumbai Base", fuelLevel: 100, lat: 19.0, lng: 72.8 },
-  { id: "u8", type: "supply", label: "SUP-01", status: "returning", location: "En Route", fuelLevel: 43, lat: 23.0, lng: 78.0 },
-  { id: "u9", type: "supply", label: "SUP-02", status: "deployed", location: "Assam", assignedZone: "Northeast Region", eta: 18, fuelLevel: 60, lat: 26.5, lng: 93.1 },
+  { id: "u1", type: "ambulance", label: "AMB-01", status: "available", location: "Himalayas Base", fuelLevel: 78 },
+  { id: "u2", type: "ambulance", label: "AMB-02", status: "available", location: "Odisha Base", fuelLevel: 62 },
+  { id: "u3", type: "ambulance", label: "AMB-03", status: "available", location: "Delhi Base", fuelLevel: 95 },
+  { id: "u4", type: "firetruck", label: "FT-01", status: "available", location: "Central Base", fuelLevel: 88 },
+  { id: "u5", type: "firetruck", label: "FT-02", status: "available", location: "Wayanad Base", fuelLevel: 55 },
+  { id: "u6", type: "rescue", label: "RSC-01", status: "available", location: "Odisha Base", fuelLevel: 71 },
+  { id: "u7", type: "rescue", label: "RSC-02", status: "available", location: "Mumbai Base", fuelLevel: 100 },
+  { id: "u8", type: "supply", label: "SUP-01", status: "available", location: "Central Base", fuelLevel: 43 },
+  { id: "u9", type: "supply", label: "SUP-02", status: "available", location: "Assam Base", fuelLevel: 60 },
 ];
 
 const MOCK_SUPPLIES: SupplyItem[] = [
@@ -103,4 +109,31 @@ export const useResourceStore = create<ResourceStore>((set) => ({
         s.id === id ? { ...s, occupied, status: occupied >= s.capacity ? "full" : "open" } : s
       ),
     })),
+
+  addShelters: (newShelters) =>
+    set((state) => ({
+      // Append new shelters, avoiding duplicates by id
+      shelters: [...newShelters, ...state.shelters.filter(s => !newShelters.find(ns => ns.id === s.id))]
+    })),
+
+  autoDeployUnit: (type: ResourceUnit["type"], lat: number, lng: number, waypoints: [number, number][]) =>
+    set((state) => {
+      const availableUnit = state.units.find(u => u.type === type && u.status === 'available');
+      if (!availableUnit) return state;
+
+      return {
+        units: state.units.map(u => u.id === availableUnit.id ? {
+          ...u,
+          status: 'deployed',
+          lat,
+          lng,
+          routeWaypoints: waypoints,
+          waypointIndex: 0,
+          direction: 'toShelter', // In this simulation, this triggers the path loop
+          assignedZone: 'Emergency Response'
+        } : u),
+        deployedUnits: state.deployedUnits + 1
+      };
+    }),
 }));
+

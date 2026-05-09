@@ -33,6 +33,7 @@ interface RouteStore {
   updateRouteStatus: (id: string, status: EvacuationRoute["status"]) => void;
   addRoute: (route: EvacuationRoute) => void;
   optimizeSignals: () => void;
+  generateRoutesForDisaster: (lat: number, lng: number) => Promise<EvacuationRoute[]>;
 }
 
 const MOCK_ROUTES: EvacuationRoute[] = [
@@ -135,4 +136,53 @@ export const useRouteStore = create<RouteStore>((set) => ({
       ),
       reroutedVehicles: state.reroutedVehicles + Math.floor(Math.random() * 200) + 50,
     })),
+
+  generateRoutesForDisaster: async (lat: number, lng: number) => {
+    // Generate some fake shelter destinations roughly 10-20km away
+    const shelters = [
+      { id: `sh-${Date.now()}-1`, name: "Alpha Safe Zone", lat: lat + 0.1, lng: lng + 0.1, capacity: 500, occupied: 120, hasmedical: true, hasfood: true, status: "open" as const },
+      { id: `sh-${Date.now()}-2`, name: "Beta Evac Camp", lat: lat - 0.15, lng: lng + 0.05, capacity: 800, occupied: 300, hasmedical: false, hasfood: true, status: "open" as const },
+      { id: `sh-${Date.now()}-3`, name: "Gamma Relief", lat: lat + 0.08, lng: lng - 0.12, capacity: 400, occupied: 390, hasmedical: true, hasfood: true, status: "open" as const },
+      { id: `sh-${Date.now()}-4`, name: "Delta Hospital Base", lat: lat - 0.1, lng: lng - 0.1, capacity: 1500, occupied: 1000, hasmedical: true, hasfood: true, status: "open" as const },
+    ];
+
+    // Dynamically inject the shelters into the resource store so they appear on the map!
+    const { useResourceStore } = await import("@/store/resourceStore");
+    useResourceStore.getState().addShelters(shelters);
+
+    const newRoutes = await Promise.all(shelters.map(async (sh, i) => {
+      let waypoints: [number, number][] = [[lat, lng], [sh.lat, sh.lng]];
+      try {
+        // Use OSRM GIS Engine to fetch actual road polyline
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${sh.lng},${sh.lat}?overview=full&geometries=geojson`);
+        const data = await res.json();
+        if (data.routes && data.routes[0]) {
+          waypoints = data.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+        }
+      } catch (e) {
+        console.warn("OSRM GIS Engine failed", e);
+      }
+
+      return {
+        id: `r-${sh.id}`,
+        name: `${sh.name} Route`,
+        fromZone: "Disaster Epicenter",
+        toShelter: sh.name,
+        distance: Math.floor(Math.random() * 20) + 10,
+        estimatedTime: Math.floor(Math.random() * 40) + 20,
+        riskScore: [12, 35, 62, 18][i] || 20,
+        capacity: 1000,
+        status: (["active", "congested", "blocked", "clear"] as const)[i] || "active",
+        waypoints,
+        blockedSegments: i === 2 ? 3 : 0,
+      };
+    }));
+
+    // Find the safest route and set it as active
+    const safestRoute = newRoutes.reduce((prev, curr) => (prev.riskScore < curr.riskScore ? prev : curr));
+    set({ routes: newRoutes, activeRouteId: safestRoute.id });
+
+    return newRoutes;
+  },
+
 }));

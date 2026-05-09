@@ -34,12 +34,45 @@ export function startRealtimeSimulation(): Unsubscribe {
     );
     useResourceStore.setState({ units: fuelUpdated });
 
-    // Jitter unit positions slightly to feel "live"
-    const unitsUpdatedWithCoords = updated.map(u => ({
-      ...u,
-      lat: u.lat ? u.lat + (Math.random() - 0.5) * 0.0002 : undefined,
-      lng: u.lng ? u.lng + (Math.random() - 0.5) * 0.0002 : undefined,
-    }));
+    // Move deployed units along their routes, or jitter if no route
+    const unitsUpdatedWithCoords = fuelUpdated.map(u => {
+      if (u.status === "deployed" && u.routeWaypoints && u.routeWaypoints.length > 0) {
+        // Move along the path
+        const nextIndex = (u.waypointIndex || 0) + 100;
+        if (nextIndex < u.routeWaypoints.length) {
+          return {
+            ...u,
+            lat: u.routeWaypoints[nextIndex][0],
+            lng: u.routeWaypoints[nextIndex][1],
+            waypointIndex: nextIndex,
+          };
+        } else {
+          // Arrived at current destination
+          if (u.direction === "toShelter") {
+            // Turn around! Reverse waypoints to go back to fire incident
+            const reversed = [...u.routeWaypoints].reverse();
+            return {
+              ...u,
+              direction: "toFire" as const,
+              routeWaypoints: reversed,
+              waypointIndex: 0,
+              lat: reversed[0][0],
+              lng: reversed[0][1],
+            };
+          } else {
+            // Arrived back at fire or finished returning
+            return { ...u, status: "available" as const, eta: 0, direction: undefined };
+          }
+        }
+      }
+
+      // Default fallback jitter
+      return {
+        ...u,
+        lat: u.lat ? u.lat + (Math.random() - 0.5) * 0.0002 : undefined,
+        lng: u.lng ? u.lng + (Math.random() - 0.5) * 0.0002 : undefined,
+      };
+    });
     useResourceStore.setState({ units: unitsUpdatedWithCoords });
 
     // Jitter disaster positions slightly to feel "live"

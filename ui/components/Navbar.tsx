@@ -68,7 +68,7 @@ export default function Navbar() {
         {/* Live dot */}
         <div className="flex items-center gap-1.5 pl-3 border-l border-white/5">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-mono text-gray-400 font-medium tracking-wider">
+          <span suppressHydrationWarning className="text-[10px] font-mono text-gray-400 font-medium tracking-wider">
             {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>

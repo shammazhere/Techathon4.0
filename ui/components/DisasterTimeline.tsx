@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRiskStore, type DisasterType, type SeverityLevel } from "@/store/riskStore";
-import { Waves, Flame, Activity, AlertTriangle, ShieldAlert, Target, History, X } from "lucide-react";
+import { Waves, Flame, Activity, AlertTriangle, ShieldAlert, Target, History, X, Database } from "lucide-react";
 
 const TYPE_META: Record<DisasterType, { icon: React.ReactNode; label: string; color: string }> = {
   wildfire: { icon: <Flame size={16} />, label: "Wildfire", color: "text-orange-400" },
@@ -58,9 +58,25 @@ export default function DisasterTimeline() {
 
   async function handleTrigger() {
     setTriggering(true);
-    await new Promise((r) => setTimeout(r, 900));
+
+    try {
+      // Call the dev fire API (backend simulation)
+      const backendUrl = `http://localhost:8000/disaster/start?type=${selType}`;
+      console.log(`Calling dev fire API: ${backendUrl}`);
+      const res = await fetch(backendUrl, { method: "POST" });
+      const data = await res.json();
+      console.log("Dev fire API response:", data);
+    } catch (err) {
+      console.warn("Dev fire API not reachable, falling back to local simulation:", err);
+    }
+
     const zone = TRIGGER_ZONES[selZone];
     triggerDisaster(zone.lat, zone.lng, selSev);
+
+    // Generate real road routes from GIS Engine (OSRM)
+    const { generateRoutesForDisaster } = (await import("@/store/routeStore")).useRouteStore.getState();
+    await generateRoutesForDisaster(zone.lat, zone.lng);
+
     setTriggering(false);
   }
 
@@ -115,16 +131,15 @@ export default function DisasterTimeline() {
                     <X size={14} />
                   </button>
                 </div>
-                
+
                 {/* Emergency Broadcast System (EBS) Button */}
-                <button 
+                <button
                   onClick={() => setAlertSent(prev => ({ ...prev, [d.id]: true }))}
                   disabled={alertSent[d.id]}
-                  className={`w-full py-2 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${
-                    alertSent[d.id] 
-                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed" 
+                  className={`w-full py-2 rounded-md text-[10px] font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-2 border ${alertSent[d.id]
+                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed"
                       : "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                  }`}
+                    }`}
                 >
                   {alertSent[d.id] ? (
                     <>
@@ -242,6 +257,41 @@ export default function DisasterTimeline() {
                 </>
               )}
             </motion.button>
+
+            {/* External Data Syncs */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={async () => {
+                  setTriggering(true);
+                  const { fetchNasaFires } = await import('@/services/nasaFirms');
+                  await fetchNasaFires();
+                  setTriggering(false);
+                }}
+                disabled={triggering}
+                className={`py-3 rounded-lg font-bold text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 ${triggering ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              >
+                <Activity size={14} />
+                NASA FIRMS (LIVE)
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={async () => {
+                  setTriggering(true);
+                  const { fetchKaggleFires } = await import('@/services/kaggleService');
+                  await fetchKaggleFires();
+                  setTriggering(false);
+                }}
+                disabled={triggering}
+                className={`py-3 rounded-lg font-bold text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 border border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 ${triggering ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              >
+                <Database size={14} />
+                KAGGLE DATASET
+              </motion.button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

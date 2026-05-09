@@ -1,12 +1,19 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import RoutePanel from "@/components/RoutePanel";
+import { startRealtimeSimulation } from "@/services/realtime";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function MapPage() {
+  useEffect(() => {
+    const stop = startRealtimeSimulation();
+    return stop;
+  }, []);
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       <Navbar />

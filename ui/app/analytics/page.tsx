@@ -13,36 +13,30 @@ import {
   Activity, ShieldAlert, Ambulance, Route, Package, Wind, Droplets, Home, Box
 } from "lucide-react";
 
-// ─── Mock time-series data ───────────────────────────────────────────────────
+import { DisasterZone } from "@/store/riskStore";
+import { ResourceUnit } from "@/store/resourceStore";
+
+// ─── Dynamic Data Generators ────────────────────────────────────────────────
 const HOURS = Array.from({ length: 12 }, (_, i) => `${String(i * 2).padStart(2, "0")}:00`);
 
-const fireSeries = HOURS.map((h, i) => ({
-  time: h,
-  fire: Math.min(100, 20 + Math.sin(i * 0.5) * 30 + Math.random() * 15),
-  intensity: Math.min(100, 10 + i * 5 + Math.random() * 10),
-}));
+const generateDynamicFireSeries = (activeDisasters: DisasterZone[]) => {
+  const intensity = activeDisasters.reduce((acc, d) => acc + (d.severity === 'critical' ? 40 : 20), 10);
+  return HOURS.map((h, i) => ({
+    time: h,
+    fire: Math.min(100, (i < 8 ? intensity * 0.6 : intensity) + Math.random() * 10),
+    intensity: Math.min(100, intensity * 0.8 + Math.random() * 5),
+  }));
+};
 
-const evacuationSeries = HOURS.map((h, i) => ({
-  time: h,
-  moved: Math.floor(i * 2800 + Math.random() * 500),
-  rerouted: Math.floor(i * 180 + Math.random() * 40),
-}));
+const generateDynamicEvacSeries = (units: ResourceUnit[]) => {
+  const deployed = units.filter(u => u.status === 'deployed').length;
+  return HOURS.map((h, i) => ({
+    time: h,
+    moved: Math.floor(i * (deployed * 500) + Math.random() * 200),
+    rerouted: Math.floor(i * (deployed * 50) + Math.random() * 20),
+  }));
+};
 
-const resourceSeries = [
-  { name: "Ambulances", deployed: 2, available: 1, total: 3 },
-  { name: "Fire Trucks", deployed: 2, available: 0, total: 2 },
-  { name: "Rescue",      deployed: 1, available: 1, total: 2 },
-  { name: "Supply",      deployed: 2, available: 0, total: 2 },
-];
-
-const radarData = [
-  { metric: "Fire Risk",    value: 85 },
-  { metric: "Smoke Index",  value: 62 },
-  { metric: "Road Block",   value: 45 },
-  { metric: "Pop. Density", value: 74 },
-  { metric: "Shelter Cap.", value: 68 },
-  { metric: "Unit Cover",   value: 52 },
-];
 
 // ─── Tooltip styles ───────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: string | number; color: string }[]; label?: string }) => {
@@ -75,16 +69,40 @@ export default function AnalyticsPage() {
   const { routes } = useRouteStore();
   const { units, supplies } = useResourceStore();
 
-  const avgRisk = Math.round(riskCells.reduce((s, c) => s + c.overallRisk, 0) / riskCells.length);
+  // ─── Dynamic State Calculation ─────────────────────────────────────────────
+  const avgRisk = activeDisasters.length > 0
+    ? Math.min(100, Math.round(activeDisasters.reduce((s, d) => s + (d.severity === 'critical' ? 30 : 15), 10)))
+    : 12;
+
   const deployed = units.filter((u) => u.status === "deployed").length;
   const safeRoutes = routes.filter((r) => r.status !== "blocked").length;
+
+  const fireSeries = generateDynamicFireSeries(activeDisasters);
+  const evacuationSeries = generateDynamicEvacSeries(units);
+
+  const resourceSeries = [
+    { name: "Ambulances", deployed: units.filter(u => u.type === 'ambulance' && u.status === 'deployed').length, total: units.filter(u => u.type === 'ambulance').length },
+    { name: "Fire Trucks", deployed: units.filter(u => u.type === 'firetruck' && u.status === 'deployed').length, total: units.filter(u => u.type === 'firetruck').length },
+    { name: "Rescue", deployed: units.filter(u => u.type === 'rescue' && u.status === 'deployed').length, total: units.filter(u => u.type === 'rescue').length },
+    { name: "Supply", deployed: units.filter(u => u.type === 'supply' && u.status === 'deployed').length, total: units.filter(u => u.type === 'supply').length },
+  ].map(r => ({ ...r, available: Math.max(0, r.total - r.deployed) }));
+
+  const radarData = [
+    { metric: "Fire Risk", value: avgRisk },
+    { metric: "Smoke Index", value: Math.min(100, activeDisasters.length * 25) },
+    { metric: "Road Block", value: (routes.filter(r => r.status === 'blocked').length / routes.length) * 100 || 10 },
+    { metric: "Pop. Density", value: 74 },
+    { metric: "Shelter Cap.", value: 85 },
+    { metric: "Unit Cover", value: (deployed / units.length) * 100 || 20 },
+  ];
+
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#050505] text-gray-200">
       <Navbar />
-      
+
       <div className="flex-1 overflow-y-auto side-panel px-8 py-8 space-y-6">
-        
+
         {/* KPI summary row */}
         <div className="grid grid-cols-4 gap-6">
           {[
@@ -113,7 +131,7 @@ export default function AnalyticsPage() {
               <AreaChart data={fireSeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                 <defs>
                   <linearGradient id="gFire" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
@@ -121,8 +139,8 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} dy={10} />
                 <YAxis domain={[0, 100]} tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="fire"      name="Fire Risk"    stroke="#ef4444" fill="url(#gFire)"  strokeWidth={2.5} />
-                <Area type="monotone" dataKey="intensity" name="Heat Intensity" stroke="#f97316" fill="none"         strokeWidth={1.5} strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="fire" name="Fire Risk" stroke="#ef4444" fill="url(#gFire)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="intensity" name="Heat Intensity" stroke="#f97316" fill="none" strokeWidth={1.5} strokeDasharray="4 4" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -135,7 +153,7 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="time" tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} dy={10} />
                 <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="moved"    name="Evacuees Moved"    stroke="#22c55e" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="moved" name="Evacuees Moved" stroke="#22c55e" strokeWidth={2.5} dot={false} />
                 <Line type="monotone" dataKey="rerouted" name="Vehicles Rerouted" stroke="#0ea5e9" strokeWidth={2} dot={false} strokeDasharray="5 5" />
               </LineChart>
             </ResponsiveContainer>
@@ -151,7 +169,7 @@ export default function AnalyticsPage() {
                 <XAxis type="number" tick={{ fill: "#6b7280", fontSize: 10 }} domain={[0, "dataMax"]} tickLine={false} axisLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fill: "#9ca3af", fontSize: 10, fontWeight: 500 }} width={80} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.02)" }} />
-                <Bar dataKey="deployed"  name="Deployed"  fill="#0ea5e9" stackId="a" radius={[2, 0, 0, 2]} />
+                <Bar dataKey="deployed" name="Deployed" fill="#0ea5e9" stackId="a" radius={[2, 0, 0, 2]} />
                 <Bar dataKey="available" name="Available" fill="rgba(14, 165, 233, 0.2)" stackId="a" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -174,8 +192,8 @@ export default function AnalyticsPage() {
               {supplies.map((s) => {
                 const pct = Math.round((s.deployed / s.total) * 100);
                 const isCritical = pct > 85;
-                
-                const iconMap: Record<string, any> = {
+
+                const iconMap: Record<string, typeof Activity> = {
                   "Medical Kits": Activity,
                   "Food Rations": Box,
                   "Oxygen Tanks": Wind,
@@ -186,18 +204,18 @@ export default function AnalyticsPage() {
                 const Icon = iconMap[s.category] || Package;
 
                 return (
-                  <div 
-                    key={s.category} 
+                  <div
+                    key={s.category}
                     className="relative group rounded-xl border border-white/5 bg-white/1 p-3.5 transition-all hover:bg-white/3 hover:border-white/10"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div 
+                        <div
                           className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-500 shadow-lg"
-                          style={{ 
-                            background: `${s.color}15`, 
+                          style={{
+                            background: `${s.color}15`,
                             border: `1px solid ${s.color}30`,
-                            color: s.color 
+                            color: s.color
                           }}
                         >
                           <Icon size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
@@ -226,13 +244,13 @@ export default function AnalyticsPage() {
 
                     <div className="space-y-1.5">
                       <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden relative">
-                        <div 
-                          className="h-full rounded-full transition-all duration-1000 ease-out" 
+                        <div
+                          className="h-full rounded-full transition-all duration-1000 ease-out"
                           style={{
                             width: `${pct}%`,
                             background: `linear-gradient(90deg, ${s.color}cc, ${s.color})`,
                             boxShadow: `0 0 12px ${s.color}50`,
-                          }} 
+                          }}
                         />
                       </div>
                       <div className="flex justify-between text-[7px] font-bold text-gray-600 uppercase tracking-[0.2em]">
@@ -268,7 +286,7 @@ export default function AnalyticsPage() {
                   return (
                     <tr key={c.id} className="hover:bg-white/2 transition-colors">
                       <td className="py-3 px-4 font-medium text-gray-200">{c.zone}</td>
-                      <td className={`py-3 px-4 ${c.fireRisk  >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}%</td>
+                      <td className={`py-3 px-4 ${c.fireRisk >= 70 ? "text-red-400" : "text-gray-400"}`}>{c.fireRisk}%</td>
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${oc}`}>
                           {c.overallRisk}%
@@ -291,7 +309,7 @@ export default function AnalyticsPage() {
             </table>
           </div>
         </div>
-        
+
       </div>
     </div>
   );
