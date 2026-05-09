@@ -35,17 +35,10 @@ interface RiskStore {
   alertLevel: "green" | "yellow" | "orange" | "red";
   totalAffected: number;
   disasterHistory: DisasterZone[];
-  weather: {
-    temp: number;
-    humidity: number;
-    windSpeed: number;
-    description: string;
-  };
 
   triggerDisaster: (lat: number, lng: number, severity: SeverityLevel) => void;
   removeDisaster: (id: string) => void;
   updateRiskCells: (cells: RiskCell[]) => void;
-  updateWeather: (weather: any) => void;
   setSystemStatus: (status: "idle" | "monitoring" | "active" | "critical") => void;
   clearAll: () => void;
 }
@@ -66,12 +59,6 @@ export const useRiskStore = create<RiskStore>((set) => ({
   alertLevel: "green",
   totalAffected: 0,
   disasterHistory: [],
-  weather: {
-    temp: 28,
-    humidity: 75,
-    windSpeed: 5,
-    description: "Clear",
-  },
 
   triggerDisaster: (lat, lng, severity) => {
     const newDisaster: DisasterZone = {
@@ -109,15 +96,6 @@ export const useRiskStore = create<RiskStore>((set) => ({
   },
 
   updateRiskCells: (cells) => set({ riskCells: cells }),
-
-  updateWeather: (weather) => set({ 
-    weather: {
-      temp: weather.temperature_c || 25,
-      humidity: weather.humidity_pct || 70,
-      windSpeed: weather.wind_speed_ms || 3,
-      description: weather.weather_main || "Unknown"
-    } 
-  }),
 
   setSystemStatus: (status) => set({ systemStatus: status }),
 

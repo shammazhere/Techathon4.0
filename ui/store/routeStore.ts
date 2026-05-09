@@ -115,8 +115,8 @@ export const useRouteStore = create<RouteStore>((set) => ({
   routes: MOCK_ROUTES,
   activeRouteId: "r1",
   signals: MOCK_SIGNALS,
-  reroutedVehicles: 0,
-  evacueesMoved: 0,
+  reroutedVehicles: 1842,
+  evacueesMoved: 28430,
 
   selectRoute: (id) => set({ activeRouteId: id }),
 
